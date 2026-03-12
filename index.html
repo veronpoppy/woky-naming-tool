@@ -224,102 +224,73 @@ body { background:var(--bg); color:var(--ink); font-family:'Noto Sans TC',sans-s
 
 
 /* ── RWD ────────────────────────────────────────────────────────── */
+.topbar-row1 { display:flex; align-items:center; gap:8px; }
+.topbar-row2 { display:flex; align-items:center; gap:8px; }
+
 @media (max-width: 768px) {
+  /* Topbar: two rows stacked */
   .topbar {
-    padding:0 16px; height:auto; min-height:56px;
-    flex-wrap:wrap; gap:8px; padding-top:10px; padding-bottom:10px;
+    padding:10px 16px 0; height:auto;
+    flex-direction:column; align-items:stretch; gap:0;
+    border-bottom:1px solid var(--light);
   }
-  .topbar-brand { font-size:13px; letter-spacing:4px; }
+  .topbar-brand { font-size:13px; letter-spacing:5px; padding:6px 0 10px; }
   .topbar-subtitle { display:none; }
-  .topbar-right { width:100%; overflow-x:auto; padding-bottom:2px; flex-wrap:nowrap; gap:6px; }
-  .mode-tabs { gap:2px; }
-  .mode-tab { font-size:9px; padding:5px 8px; }
-  .btn { font-size:9px; padding:5px 10px; }
 
-  .main { padding:24px 16px; }
+  .topbar-right {
+    display:flex; flex-direction:column; gap:0; width:100%;
+  }
+  .topbar-row1 {
+    display:flex; gap:6px; align-items:center;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--lighter);
+  }
+  .topbar-row2 {
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    display:flex; gap:6px; align-items:center;
+    padding:8px 0 10px;
+    /* fade edges to hint scrollability */
+    -webkit-mask-image:linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
+    mask-image:linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
+    padding-left:12px; padding-right:12px;
+  }
+  .topbar-row2::-webkit-scrollbar { display:none; }
 
+  .mode-tabs { gap:2px; flex-shrink:0; }
+  .mode-tab { font-size:9px; padding:5px 10px; white-space:nowrap; }
+  .btn { font-size:9px; padding:5px 10px; white-space:nowrap; }
+  .btn-primary { white-space:nowrap; }
+
+  /* Main content */
+  .main { padding:20px 14px; }
   .cat-label { font-size:16px; }
-
   .series-grid { grid-template-columns:1fr; gap:14px; }
-
   .series-head { padding:12px 14px 10px; }
   .series-name { font-size:15px; }
 
-  .product-row { padding:10px 14px; gap:8px; }
+  /* Product rows */
+  .product-row { padding:10px 14px; gap:8px; flex-wrap:nowrap; }
   .product-row.all-mode { padding:12px 14px; }
-  .product-name { font-size:13px; }
+  .product-name { font-size:14px; white-space:normal; word-break:keep-all; }
+  .product-name-cell { min-width:0; }
+  .product-spec { flex-shrink:0; }
   .drag-handle { display:none; }
+  .row-end { gap:4px; }
+  .row-end .btn { padding:4px 8px; font-size:9px; }
 
-  .all-name-row { grid-template-columns:48px 1fr; column-gap:10px; }
+  .all-name-row { grid-template-columns:44px 1fr; column-gap:8px; }
   .all-name-label { font-size:8px; }
   .all-name-val { font-size:13px; }
 
-  .disc-section { padding:16px; }
-  .disc-item { flex-wrap:wrap; }
+  .disc-section { padding:14px; }
+  .disc-item { flex-wrap:wrap; gap:8px; }
 }
 
 @media (max-width: 480px) {
-  .topbar-brand { font-size:12px; letter-spacing:3px; }
-  .main { padding:16px 12px; }
-  .cat-label { font-size:14px; }
-  .series-name { font-size:14px; }
-  .modal { width:calc(100vw - 32px); padding:24px 20px; border-radius:16px; }
-  /* Memo sidebar full width on small screens */
-}
-
-
-/* ── RWD ──────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .topbar {
-    padding: 0 12px;
-    gap: 6px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .topbar::-webkit-scrollbar { display: none; }
-  .topbar-brand { font-size: 11px; white-space: nowrap; flex-shrink: 0; }
-  .topbar button { font-size: 9px; padding: 5px 10px; white-space: nowrap; flex-shrink: 0; }
-
-  .main { padding: 20px 14px; }
-
-  .cat-header { flex-wrap: wrap; gap: 6px; }
-  .cat-label { font-size: 22px; }
-
-  .series-grid { grid-template-columns: 1fr !important; gap: 14px; }
-
-  .series-card { padding: 14px 12px; }
-  .series-name { font-size: 16px; }
-
-  .product-row { gap: 6px; padding: 10px 0; flex-wrap: nowrap; }
-  .product-spec { font-size: 10px; min-width: 36px; }
-
-  .product-name { font-size: 15px; }
-
-  .all-name-rows { width: 100%; }
-  .all-name-row { grid-template-columns: 48px 1fr; column-gap: 10px; }
-  .all-name-label { font-size: 8px; }
-  .all-name-val { font-size: 13px; }
-  .all-name-val.is-short { font-size: 12px; }
-  .all-name-val.is-full { font-size: 10px; }
-
-  .disc-section { padding: 14px 0; }
-
-  /* Memo sidebar full screen on mobile */
-  div[style*="width:380"] {
-    width: 100% !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .cat-label { font-size: 18px; }
-  .series-name { font-size: 14px; }
-  .product-name { font-size: 13px; }
-  .material-tag, .tag-chip { font-size: 8px; padding: 2px 6px; }
-}
-
-</style>
+  .topbar-brand { font-size:12px; letter-spacing:4px; }
+  .main { padding:14px 12px; }
+  .modal { width:calc(100vw - 24px); padding:22px 18px; border-radius:16px; }
+}</style>
 </head>
 <body>
 <div id="root"></div>
@@ -1132,14 +1103,17 @@ const STORAGE_KEY = 'woky_naming_tool_v1';`
           WOKY<span className="topbar-subtitle">產品命名管理工具</span>
         </div>
         <div className="topbar-right">
-          <button onClick={undo} title="Cmd+Z" style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid #e2ddd8',background:'transparent',color:'#9a9088',cursor:'pointer',transition:'all 0.15s',display:'flex',alignItems:'center',gap:4}}>↩ 復原</button>
-          <button onClick={()=>setMemoOpen(o=>!o)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:memoOpen?'#141210':'#e2ddd8',background:memoOpen?'#141210':'transparent',color:memoOpen?'#fff':'#9a9088',cursor:'pointer',transition:'all 0.15s'}}>後綴詞備忘</button>
-          {saveLabel && <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:500,color:'var(--mid)',letterSpacing:'0.3px'}}>{saveLabel}</span>}
-          <div style={{display:'flex',gap:2,background:'#f0ece8',borderRadius:20,padding:2}}>
-            {[{k:'series',l:'系列檢視'},{k:'material',l:'材質檢視'}].map(v=>(
-              <button key={v.k} onClick={()=>setView(v.k)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'5px 14px',borderRadius:20,border:'none',cursor:'pointer',background:view===v.k?'#141210':'transparent',color:view===v.k?'#fff':'#9a9088',transition:'all 0.15s'}}>{v.l}</button>
-            ))}
+          <div className="topbar-row1">
+            <div style={{display:'flex',gap:2,background:'#f0ece8',borderRadius:20,padding:2}}>
+              {[{k:'series',l:'系列'},{k:'material',l:'材質'}].map(v=>(
+                <button key={v.k} onClick={()=>setView(v.k)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'5px 12px',borderRadius:20,border:'none',cursor:'pointer',background:view===v.k?'#141210':'transparent',color:view===v.k?'#fff':'#9a9088',transition:'all 0.15s'}}>{v.l}</button>
+              ))}
+            </div>
+            <button onClick={undo} title="Cmd+Z" style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid #e2ddd8',background:'transparent',color:'#9a9088',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>↩ 復原</button>
+            <button onClick={()=>setMemoOpen(o=>!o)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:memoOpen?'#141210':'#e2ddd8',background:memoOpen?'#141210':'transparent',color:memoOpen?'#fff':'#9a9088',cursor:'pointer'}}>備忘</button>
+            {saveLabel && <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:500,color:'var(--mid)'}}>{saveLabel}</span>}
           </div>
+          <div className="topbar-row2">
           <div className="mode-tabs">
             {MODES.map(m => (
               <button key={m.key} className={`mode-tab ${mode===m.key?'active':''}`} onClick={()=>setMode(m.key)}>{m.label}</button>
@@ -1148,6 +1122,7 @@ const STORAGE_KEY = 'woky_naming_tool_v1';`
           <button className="btn btn-ghost" onClick={copyAll}>複製架構</button>
           <button className="btn btn-ghost" onClick={exportCSV}>匯出 CSV</button>
           <button className="btn btn-primary" onClick={exportHTML}>💾 下載儲存版本</button>
+          </div>{/* end topbar-row2 */}
         </div>
       </div>
 
