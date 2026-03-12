@@ -224,68 +224,39 @@ body { background:var(--bg); color:var(--ink); font-family:'Noto Sans TC',sans-s
 
 
 /* ── RWD ────────────────────────────────────────────────────────── */
-.topbar-row1 { display:flex; align-items:center; gap:8px; }
-.topbar-row2 { display:flex; align-items:center; gap:8px; }
+.topbar-row1 { display:flex; gap:8px; align-items:center; }
+.topbar-row2 { display:flex; gap:6px; align-items:center; }
 
 @media (max-width: 768px) {
-  /* Topbar: two rows stacked */
-  .topbar {
-    padding:10px 16px 0; height:auto;
-    flex-direction:column; align-items:stretch; gap:0;
-    border-bottom:1px solid var(--light);
-  }
+  .topbar { padding:10px 16px 0; height:auto; flex-direction:column; align-items:stretch; gap:0; }
   .topbar-brand { font-size:13px; letter-spacing:5px; padding:6px 0 10px; }
   .topbar-subtitle { display:none; }
-
-  .topbar-right {
-    display:flex; flex-direction:column; gap:0; width:100%;
-  }
-  .topbar-row1 {
-    display:flex; gap:6px; align-items:center;
-    padding-bottom:8px;
-    border-bottom:1px solid var(--lighter);
-  }
-  .topbar-row2 {
-    overflow-x:auto; -webkit-overflow-scrolling:touch;
-    display:flex; gap:6px; align-items:center;
-    padding:8px 0 10px;
-    /* fade edges to hint scrollability */
-    -webkit-mask-image:linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
-    mask-image:linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
-    padding-left:12px; padding-right:12px;
-  }
+  .topbar-right { display:flex; flex-direction:column; gap:0; width:100%; }
+  .topbar-row1 { display:flex; gap:6px; align-items:center; padding-bottom:8px; border-bottom:1px solid #ede9e4; }
+  .topbar-row2 { overflow-x:auto; -webkit-overflow-scrolling:touch; display:flex; gap:6px; align-items:center; padding:8px 4px 10px; }
   .topbar-row2::-webkit-scrollbar { display:none; }
-
   .mode-tabs { gap:2px; flex-shrink:0; }
-  .mode-tab { font-size:9px; padding:5px 10px; white-space:nowrap; }
-  .btn { font-size:9px; padding:5px 10px; white-space:nowrap; }
-  .btn-primary { white-space:nowrap; }
-
-  /* Main content */
+  .mode-tab  { font-size:9px; padding:5px 10px; white-space:nowrap; flex-shrink:0; }
+  .btn       { font-size:9px; padding:5px 10px; white-space:nowrap; flex-shrink:0; }
   .main { padding:20px 14px; }
-  .cat-label { font-size:16px; }
+  .cat-label { font-size:15px; word-break:break-all; }
   .series-grid { grid-template-columns:1fr; gap:14px; }
   .series-head { padding:12px 14px 10px; }
   .series-name { font-size:15px; }
-
-  /* Product rows */
-  .product-row { padding:10px 14px; gap:8px; flex-wrap:nowrap; }
-  .product-row.all-mode { padding:12px 14px; }
-  .product-name { font-size:14px; white-space:normal; word-break:keep-all; }
-  .product-name-cell { min-width:0; }
-  .product-spec { flex-shrink:0; }
+  .product-row { padding:10px 12px; gap:6px; align-items:flex-start; }
+  .product-name { font-size:13px; }
+  .product-name-cell { min-width:0; flex:1; overflow:hidden; word-break:break-all; overflow-wrap:anywhere; }
+  .product-spec { font-size:10px; white-space:nowrap; flex-shrink:0; }
   .drag-handle { display:none; }
-  .row-end { gap:4px; }
-  .row-end .btn { padding:4px 8px; font-size:9px; }
-
+  .material-tag { font-size:8px; padding:2px 6px; flex-shrink:0; }
+  .row-end { gap:3px; flex-shrink:0; }
+  .row-end .btn { padding:3px 7px; font-size:9px; }
   .all-name-row { grid-template-columns:44px 1fr; column-gap:8px; }
   .all-name-label { font-size:8px; }
   .all-name-val { font-size:13px; }
-
   .disc-section { padding:14px; }
   .disc-item { flex-wrap:wrap; gap:8px; }
 }
-
 @media (max-width: 480px) {
   .topbar-brand { font-size:12px; letter-spacing:4px; }
   .main { padding:14px 12px; }
@@ -1104,17 +1075,17 @@ const STORAGE_KEY = 'woky_naming_tool_v1';`
         </div>
         <div className="topbar-right">
           <div className="topbar-row1">
-            <div style={{display:'flex',gap:2,background:'#f0ece8',borderRadius:20,padding:2}}>
-              {[{k:'series',l:'系列'},{k:'material',l:'材質'}].map(v=>(
-                <button key={v.k} onClick={()=>setView(v.k)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'5px 12px',borderRadius:20,border:'none',cursor:'pointer',background:view===v.k?'#141210':'transparent',color:view===v.k?'#fff':'#9a9088',transition:'all 0.15s'}}>{v.l}</button>
-              ))}
-            </div>
-            <button onClick={undo} title="Cmd+Z" style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid #e2ddd8',background:'transparent',color:'#9a9088',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>↩ 復原</button>
-            <button onClick={()=>setMemoOpen(o=>!o)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:memoOpen?'#141210':'#e2ddd8',background:memoOpen?'#141210':'transparent',color:memoOpen?'#fff':'#9a9088',cursor:'pointer'}}>備忘</button>
-            {saveLabel && <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:500,color:'var(--mid)'}}>{saveLabel}</span>}
+          <button onClick={undo} title="Cmd+Z" style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid #e2ddd8',background:'transparent',color:'#9a9088',cursor:'pointer',transition:'all 0.15s',display:'flex',alignItems:'center',gap:4}}>↩ 復原</button>
+          <button onClick={()=>setMemoOpen(o=>!o)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:memoOpen?'#141210':'#e2ddd8',background:memoOpen?'#141210':'transparent',color:memoOpen?'#fff':'#9a9088',cursor:'pointer',transition:'all 0.15s'}}>後綴詞備忘</button>
+          {saveLabel && <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:500,color:'var(--mid)',letterSpacing:'0.3px'}}>{saveLabel}</span>}
+          <div style={{display:'flex',gap:2,background:'#f0ece8',borderRadius:20,padding:2}}>
+            {[{k:'series',l:'系列檢視'},{k:'material',l:'材質檢視'}].map(v=>(
+              <button key={v.k} onClick={()=>setView(v.k)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'5px 14px',borderRadius:20,border:'none',cursor:'pointer',background:view===v.k?'#141210':'transparent',color:view===v.k?'#fff':'#9a9088',transition:'all 0.15s'}}>{v.l}</button>
+            ))}
+          </div>
           </div>
           <div className="topbar-row2">
-          <div className="mode-tabs">
+            <div className="mode-tabs">
             {MODES.map(m => (
               <button key={m.key} className={`mode-tab ${mode===m.key?'active':''}`} onClick={()=>setMode(m.key)}>{m.label}</button>
             ))}
@@ -1122,7 +1093,7 @@ const STORAGE_KEY = 'woky_naming_tool_v1';`
           <button className="btn btn-ghost" onClick={copyAll}>複製架構</button>
           <button className="btn btn-ghost" onClick={exportCSV}>匯出 CSV</button>
           <button className="btn btn-primary" onClick={exportHTML}>💾 下載儲存版本</button>
-          </div>{/* end topbar-row2 */}
+          </div>
         </div>
       </div>
 
