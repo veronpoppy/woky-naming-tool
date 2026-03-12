@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WOKY 產品命名管理工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+
+
+:root {
+  --bg: #F4F1ED;
+  --card: #ffffff;
+  --ink: #141210;
+  --mid: #9a9088;
+  --light: #e2ddd8;
+  --lighter: #f0ece8;
+  --accent: #1a1410;
+  --woky: #141210;
+  --danger: #b85050;
+  --add: #3a6a58;
+  --disc-bg: #f8f5f2;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--ink); font-family:'Noto Sans TC',sans-serif; min-height:100vh; }
+
+/* TOP BAR */
+.topbar {
+  position:sticky; top:0; z-index:100;
+  background:#fff; color:var(--ink);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 48px; height:64px;
+  border-bottom:1px solid var(--light);
+}
+.topbar-brand {
+  font-family:'Noto Sans TC',sans-serif; font-size:15px; font-weight:700;
+  letter-spacing:8px; text-transform:uppercase; color:var(--ink);
+}
+.topbar-subtitle {
+  font-family:'Noto Sans TC',sans-serif; font-size:10px; font-weight:400;
+  color:var(--mid); letter-spacing:1px; margin-left:16px;
+}
+.topbar-right { display:flex; gap:8px; align-items:center; }
+
+/* MODE SWITCHER */
+.mode-tabs { display:flex; gap:2px; }
+.mode-tab {
+  font-family:'Noto Sans TC',sans-serif; font-size:10px; font-weight:500; letter-spacing:0.5px;
+  padding:6px 14px; cursor:pointer; color:var(--mid);
+  border:1px solid transparent; background:transparent;
+  border-radius:20px; transition:all 0.15s; white-space:nowrap;
+}
+.mode-tab.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+.mode-tab:hover:not(.active) { color:var(--ink); border-color:var(--light); }
+
+/* ACTION BUTTONS */
+.btn {
+  font-family:'Noto Sans TC',sans-serif; font-size:10px; font-weight:500;
+  padding:7px 16px; border-radius:20px; cursor:pointer; border:1px solid transparent;
+  transition:all 0.15s; white-space:nowrap; letter-spacing:0.3px;
+}
+.btn-ghost { background:transparent; color:var(--mid); border-color:var(--light); }
+.btn-ghost:hover { color:var(--ink); border-color:var(--ink); }
+.btn-primary { background:var(--ink); color:#fff; border-color:var(--ink); }
+.btn-primary:hover { background:#333; }
+.btn-danger { background:transparent; color:var(--danger); border:1px solid var(--light); font-size:9px; padding:3px 8px; border-radius:20px; }
+
+.btn-edit { color: #5a8a70; border-color: #b8d4c4; }
+.btn-edit:hover { background: #5a8a70; color: #fff; border-color: #5a8a70; }.btn-danger:hover { background:var(--danger); color:#fff; border-color:var(--danger); }
+.btn-add { background:transparent; color:var(--add); border:1px dashed var(--light); font-size:9px; padding:3px 10px; border-radius:20px; }
+.btn-add:hover { background:var(--add); color:#fff; border-color:var(--add); }
+.btn-small { padding:3px 10px; font-size:9px; }
+
+/* MAIN LAYOUT */
+.main { padding:56px 48px; max-width:1280px; margin:0 auto; }
+
+/* CATEGORY BLOCK */
+.cat-block { margin-bottom:72px; }
+.cat-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px; padding-bottom:16px;
+  border-bottom:2px solid var(--ink);
+}
+.cat-label {
+  font-family:'Noto Sans TC',sans-serif; font-size:22px; font-weight:700;
+  letter-spacing:0px; color:var(--ink);
+}
+
+/* SERIES GRID */
+.series-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+
+/* SERIES CARD */
+.series-card {
+  background:var(--card); border:1px solid var(--light);
+  border-radius:12px; overflow:hidden; transition:box-shadow 0.2s, transform 0.2s;
+}
+.series-card.drag-over { border:2px dashed var(--accent); background:#faf8f5; }
+.series-card:hover { box-shadow:0 8px 32px rgba(0,0,0,0.08); transform:translateY(-2px); }
+
+.series-head {
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--lighter);
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.series-name-wrap { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+.series-name { font-family:'Noto Sans TC',sans-serif; font-size:17px; font-weight:700; color:var(--ink); line-height:1.3; }
+.series-en { font-family:'Cormorant Garamond',serif; font-size:13px; color:var(--mid); font-style:italic; }
+.series-actions { display:flex; gap:6px; flex-shrink:0; }
+
+/* PRODUCT ROW */
+.product-row {
+  display:flex; align-items:center; padding:11px 20px; gap:10px;
+  border-bottom:1px solid var(--lighter);
+  cursor:grab; transition:background 0.1s;
+  position:relative;
+}
+.product-row.all-mode { align-items:flex-start; padding-top:14px; padding-bottom:14px; }
+.product-row:last-child { border-bottom:none; }
+.product-row:hover { background:#faf8f6; }
+.product-row.dragging { opacity:0.4; cursor:grabbing; }
+.drag-handle { color:var(--light); font-size:14px; cursor:grab; flex-shrink:0; user-select:none; }
+.row-end { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+
+.material-tag {
+  font-family:'Noto Sans TC',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.3px;
+  padding:3px 9px; border-radius:20px; color:#fff; white-space:nowrap; flex-shrink:0;
+  cursor:pointer;
+}
+
+/* Color picker popup */
+.color-popup {
+  position:absolute; top:100%; left:0; margin-top:6px; z-index:50;
+  background:#fff; border:1px solid var(--light); border-radius:12px;
+  padding:12px; box-shadow:0 8px 32px rgba(0,0,0,0.12);
+  display:flex; flex-wrap:wrap; gap:6px; width:172px;
+}
+.color-swatch {
+  width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+  transition:transform 0.1s, border-color 0.1s;
+}
+.color-swatch:hover { transform:scale(1.18); }
+.color-swatch.active { border-color:var(--ink); }
+.color-picker-input { width:100%; height:28px; border:1px solid var(--light); border-radius:6px; cursor:pointer; margin-top:4px; }
+
+.product-name-cell { flex:1; min-width:0; }
+.product-name { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink); line-height:1.5; }
+.suffix-badge {
+  font-family:'Noto Sans TC',sans-serif; font-size:9px; font-weight:700;
+  color:#fff; background:var(--ink); margin-left:6px;
+  padding:1px 7px; border-radius:20px; letter-spacing:0.3px; vertical-align:middle;
+}
+.old-name-hint { font-family:'Noto Sans TC',sans-serif; font-size:9px; color:var(--mid); display:block; margin-top:2px; }
+.product-spec { font-family:'Noto Sans TC',sans-serif; font-size:10px; font-weight:500; color:var(--mid); white-space:nowrap; }
+.row-delete { opacity:0; transition:opacity 0.15s; }
+.product-row:hover .row-delete { opacity:1; }
+
+/* INLINE EDIT */
+.inline-edit {
+  background:transparent; border:none; border-bottom:2px solid var(--ink);
+  font-family:inherit; font-size:inherit; font-weight:inherit; color:inherit;
+  outline:none; width:100%; padding:1px 0;
+}
+
+/* ADD ROW */
+.add-row { padding:10px 20px; border-top:1px dashed var(--lighter); }
+
+/* DISC SECTION */
+.disc-section { background:var(--disc-bg); border:1px dashed var(--light); border-radius:12px; padding:24px; }
+.disc-label { font-family:'Noto Sans TC',sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; color:var(--mid); margin-bottom:16px; }
+.disc-grid { display:flex; flex-wrap:wrap; gap:10px; }
+.disc-item {
+  background:#fff; border:1px solid var(--light); border-radius:10px;
+  padding:10px 14px; display:flex; align-items:center; gap:10px;
+  cursor:grab; transition:box-shadow 0.15s;
+}
+.disc-item:hover { box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+.disc-name { font-family:'Noto Serif TC',serif; font-size:13px; color:var(--mid); }
+.disc-old { font-family:'Noto Sans TC',sans-serif; font-size:10px; color:#bbb; margin-left:4px; }
+
+/* ALL MODE */
+.all-name-rows { display:flex; flex-direction:column; gap:0; flex:1; min-width:0; }
+.all-name-row { display:grid; grid-template-columns:56px 1fr; align-items:baseline; column-gap:16px; padding:6px 0; border-bottom:1px solid var(--lighter); }
+.all-name-row:last-child { border-bottom:none; }
+.all-name-label { font-family:'Noto Sans TC',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.5px; color:var(--mid); text-align:right; padding-top:2px; }
+.all-name-val { font-family:'Noto Serif TC',serif; font-size:15px; color:var(--ink); line-height:1.5; }
+.all-name-val.is-old { font-family:'Noto Sans TC',sans-serif; font-size:11px; color:#ccc; }
+.all-name-val.is-short { font-family:'Noto Sans TC',sans-serif; font-size:13px; font-weight:700; color:var(--ink); }
+.all-name-val.is-full { font-family:'Noto Sans TC',sans-serif; font-size:11px; color:#888; }
+.all-divider { display:none; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:32px; left:50%; transform:translateX(-50%);
+  background:var(--ink); color:#fff;
+  font-family:'Noto Sans TC',sans-serif; font-size:12px; font-weight:500; letter-spacing:0.5px;
+  padding:12px 24px; border-radius:20px;
+  opacity:0; pointer-events:none; transition:opacity 0.25s;
+  z-index:999; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+}
+.toast.show { opacity:1; }
+
+/* MODAL */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.25); z-index:200; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal { background:#fff; padding:36px; width:500px; border-radius:20px; box-shadow:0 16px 64px rgba(0,0,0,0.12); }
+.modal h3 { font-family:'Noto Sans TC',sans-serif; font-size:20px; font-weight:700; margin-bottom:24px; color:var(--ink); }
+.modal-field { margin-bottom:16px; }
+.modal-field label { font-family:'Noto Sans TC',sans-serif; font-size:10px; font-weight:700; letter-spacing:1.5px; color:var(--mid); display:block; margin-bottom:6px; text-transform:uppercase; }
+.modal-field input, .modal-field select {
+  width:100%; border:1px solid var(--light); padding:10px 14px;
+  font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink);
+  border-radius:8px; outline:none; background:#fff; transition:border-color 0.15s;
+}
+.modal-field input:focus, .modal-field select:focus { border-color:var(--ink); }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:28px; }
+.btn-cancel { background:transparent; color:var(--mid); border:1px solid var(--light); font-size:12px; font-weight:500; padding:10px 20px; border-radius:20px; cursor:pointer; font-family:'Noto Sans TC',sans-serif; transition:all 0.15s; }
+.btn-cancel:hover { border-color:var(--ink); color:var(--ink); }
+.btn-confirm { background:var(--ink); color:#fff; border:none; font-size:12px; font-weight:700; padding:10px 20px; border-radius:20px; cursor:pointer; font-family:'Noto Sans TC',sans-serif; transition:background 0.15s; }
+.btn-confirm:hover { background:#333; }
+
+.mode-indicator { font-family:'Noto Sans TC',sans-serif; font-size:9px; letter-spacing:1px; color:var(--mid); padding:2px 10px; background:var(--lighter); border-radius:20px; margin-left:8px; }
+
+
+/* ── RWD ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .topbar {
+    padding:0 16px; height:auto; min-height:56px;
+    flex-wrap:wrap; gap:8px; padding-top:10px; padding-bottom:10px;
+  }
+  .topbar-brand { font-size:13px; letter-spacing:4px; }
+  .topbar-subtitle { display:none; }
+  .topbar-right { width:100%; overflow-x:auto; padding-bottom:2px; flex-wrap:nowrap; gap:6px; }
+  .mode-tabs { gap:2px; }
+  .mode-tab { font-size:9px; padding:5px 8px; }
+  .btn { font-size:9px; padding:5px 10px; }
+
+  .main { padding:24px 16px; }
+
+  .cat-label { font-size:16px; }
+
+  .series-grid { grid-template-columns:1fr; gap:14px; }
+
+  .series-head { padding:12px 14px 10px; }
+  .series-name { font-size:15px; }
+
+  .product-row { padding:10px 14px; gap:8px; }
+  .product-row.all-mode { padding:12px 14px; }
+  .product-name { font-size:13px; }
+  .drag-handle { display:none; }
+
+  .all-name-row { grid-template-columns:48px 1fr; column-gap:10px; }
+  .all-name-label { font-size:8px; }
+  .all-name-val { font-size:13px; }
+
+  .disc-section { padding:16px; }
+  .disc-item { flex-wrap:wrap; }
+}
+
+@media (max-width: 480px) {
+  .topbar-brand { font-size:12px; letter-spacing:3px; }
+  .main { padding:16px 12px; }
+  .cat-label { font-size:14px; }
+  .series-name { font-size:14px; }
+  .modal { width:calc(100vw - 32px); padding:24px 20px; border-radius:16px; }
+  /* Memo sidebar full width on small screens */
+}
+
+
+/* ── RWD ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 12px;
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .topbar::-webkit-scrollbar { display: none; }
+  .topbar-brand { font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+  .topbar button { font-size: 9px; padding: 5px 10px; white-space: nowrap; flex-shrink: 0; }
+
+  .main { padding: 20px 14px; }
+
+  .cat-header { flex-wrap: wrap; gap: 6px; }
+  .cat-label { font-size: 22px; }
+
+  .series-grid { grid-template-columns: 1fr !important; gap: 14px; }
+
+  .series-card { padding: 14px 12px; }
+  .series-name { font-size: 16px; }
+
+  .product-row { gap: 6px; padding: 10px 0; flex-wrap: nowrap; }
+  .product-spec { font-size: 10px; min-width: 36px; }
+
+  .product-name { font-size: 15px; }
+
+  .all-name-rows { width: 100%; }
+  .all-name-row { grid-template-columns: 48px 1fr; column-gap: 10px; }
+  .all-name-label { font-size: 8px; }
+  .all-name-val { font-size: 13px; }
+  .all-name-val.is-short { font-size: 12px; }
+  .all-name-val.is-full { font-size: 10px; }
+
+  .disc-section { padding: 14px 0; }
+
+  /* Memo sidebar full screen on mobile */
+  div[style*="width:380"] {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .cat-label { font-size: 18px; }
+  .series-name { font-size: 14px; }
+  .product-name { font-size: 13px; }
+  .material-tag, .tag-chip { font-size: 8px; padding: 2px 6px; }
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+
+
+
+
+
+
+const { useState, useRef, useCallback, useEffect } = React;
+
+// ── INITIAL DATA ──────────────────────────────────────────────────
+const genId = () => Math.random().toString(36).slice(2,9);
+
+const MATERIAL_TAGS = ['鈦陶瓷','純鈦','陶瓷','ECOZEN','TRITAN','無塗層','TICERA','過期'];
+const TAG_CLASS = { '鈦陶瓷':'tag-ti','純鈦':'tag-pure','陶瓷':'tag-ceramic','ECOZEN':'tag-eco','TRITAN':'tag-tritan','無塗層':'tag-pure','TICERA':'tag-kitchen','過期':'tag-disc' };
+
+const INIT_DATA = {
+  categories: [
+    { id:'c1', label:'鍋具 Cookware' },
+    { id:'c2', label:'杯瓶類 · 渾圓系列 Tumbler Family' },
+    { id:'c3', label:'杯瓶類 · 提手系列 Handle Family' },
+    { id:'c4', label:'杯瓶類 · 彈蓋系列 Flip-Lid Family' },
+    { id:'c5', label:'杯瓶類 · 帽子系列 Cap Family' },
+    { id:'c6', label:'杯瓶類 · 陶瓷系列 Ceramic Collection' },
+    { id:'c7', label:'杯瓶類 · 純鈦 & 透明 Pure Ti & ECOZEN' },
+  ],
+  series: [
+    { id:'s1', catId:'c1', name:'恰恰系列', en:'Qaqa Series' },
+    { id:'s2', catId:'c1', name:'哈哈系列', en:'Haha Series' },
+    { id:'s3', catId:'c1', name:'塔塔系列', en:'Tata Series' },
+    { id:'s4', catId:'c2', name:'渾圓杯 鈦陶瓷', en:'Ti-Ceramic Tumbler' },
+    { id:'s5', catId:'c2', name:'渾圓杯 純鈦', en:'Pure Ti Tumbler' },
+    { id:'s6', catId:'c2', name:'渾圓杯 陶瓷/無塗層', en:'Ceramic / Uncoated' },
+    { id:'s7', catId:'c2', name:'渾圓杯 透明', en:'ECOZEN Tumbler' },
+    { id:'s8', catId:'c3', name:'提手系列 鈦陶瓷', en:'Ti-Ceramic Handle' },
+    { id:'s9', catId:'c3', name:'提手系列 純鈦', en:'Pure Ti Handle' },
+    { id:'s10', catId:'c4', name:'彈蓋系列 鈦陶瓷', en:'Ti-Ceramic Flip' },
+    { id:'s11', catId:'c4', name:'彈蓋系列 透明', en:'TRITAN Flip' },
+    { id:'s12', catId:'c5', name:'帽子系列 鈦陶瓷', en:'Ti-Ceramic Cap' },
+    { id:'s13', catId:'c6', name:'陶瓷系列', en:'Ceramic Series' },
+    { id:'s14', catId:'c7', name:'純鈦隨行系列', en:'Pure Ti Portable' },
+    { id:'s15', catId:'c7', name:'透明隨行系列', en:'ECOZEN Portable' },
+  ],
+  products: [
+    // 恰恰
+    { id:genId(), seriesId:'s1', oldName:'26cm 恰恰鍋－深煎鍋', displayName:'恰恰鍋 深煎', shortName:'恰恰 深煎', fullName:'WOKY 恰恰系列 深煎鍋', suffix:'', material:'TICERA', spec:'26cm', disc:false },
+    { id:genId(), seriesId:'s1', oldName:'28cm 恰恰鍋－淺煎鍋', displayName:'恰恰鍋 淺煎', shortName:'恰恰 淺煎', fullName:'WOKY 恰恰系列 淺煎鍋', suffix:'', material:'TICERA', spec:'28cm', disc:false },
+    { id:genId(), seriesId:'s1', oldName:'28cm 恰恰鍋－平煎鍋', displayName:'恰恰鍋 平煎', shortName:'恰恰 平煎', fullName:'WOKY 恰恰系列 平煎鍋', suffix:'', material:'TICERA', spec:'28cm', disc:false },
+    { id:genId(), seriesId:'s1', oldName:'32cm 恰恰鍋－炒鍋', displayName:'恰恰鍋 炒鍋', shortName:'恰恰 炒', fullName:'WOKY 恰恰系列 炒鍋', suffix:'', material:'TICERA', spec:'32cm', disc:false },
+    { id:genId(), seriesId:'s1', oldName:'16cm 恰恰鍋－湯鍋', displayName:'恰恰鍋 湯鍋', shortName:'恰恰 湯', fullName:'WOKY 恰恰系列 湯鍋', suffix:'', material:'TICERA', spec:'16cm', disc:false },
+    // 哈哈
+    { id:genId(), seriesId:'s2', oldName:'26cm 哈哈鍋2.0－淺煎鍋', displayName:'哈哈鍋 淺煎', shortName:'哈哈 淺煎', fullName:'WOKY 哈哈系列 淺煎鍋 Classic', suffix:'Classic', material:'TICERA', spec:'26cm', disc:false },
+    { id:genId(), seriesId:'s2', oldName:'28cm 哈哈鍋2.0－深煎鍋', displayName:'哈哈鍋 深煎', shortName:'哈哈 深煎', fullName:'WOKY 哈哈系列 深煎鍋 Classic', suffix:'Classic', material:'TICERA', spec:'28cm', disc:false },
+    { id:genId(), seriesId:'s2', oldName:'32cm 哈哈鍋2.0－深煎鍋', displayName:'哈哈鍋 深煎', shortName:'哈哈 深煎', fullName:'WOKY 哈哈系列 深煎鍋 Classic', suffix:'Classic', material:'TICERA', spec:'32cm', disc:false },
+    { id:genId(), seriesId:'s2', oldName:'26cm 哈哈鍋3.0－深煎鍋', displayName:'哈哈鍋 深煎', shortName:'哈哈 深煎 Pro', fullName:'WOKY 哈哈系列 深煎鍋 Pro', suffix:'Pro', material:'TICERA', spec:'26cm', disc:false },
+    // 塔塔
+    { id:genId(), seriesId:'s3', oldName:'22cm 塔塔鍋', displayName:'塔塔鍋', shortName:'塔塔', fullName:'WOKY 塔塔系列 炒鍋', suffix:'', material:'TICERA', spec:'22cm', disc:false },
+    // 渾圓 鈦陶瓷
+    { id:genId(), seriesId:'s4', oldName:'[●●] 鈦陶瓷渾圓杯 770ml', displayName:'渾圓杯', shortName:'渾圓 Classic', fullName:'WOKY 渾圓杯 鈦陶瓷 Classic 770ml', suffix:'Classic', material:'鈦陶瓷', spec:'770ml', disc:false },
+    { id:genId(), seriesId:'s4', oldName:'[●●] 鈦陶瓷渾圓杯 3.0 MOZU', displayName:'渾圓杯 模組', shortName:'渾圓 Core', fullName:'WOKY 渾圓杯 鈦陶瓷 Core 770ml', suffix:'Core', material:'鈦陶瓷', spec:'770ml', disc:false },
+    // 渾圓 純鈦
+    { id:genId(), seriesId:'s5', oldName:'純鈦 Ti 渾圓杯 770ml', displayName:'渾圓杯 純鈦', shortName:'渾圓 Prime', fullName:'WOKY 渾圓杯 純鈦 Prime 770ml', suffix:'Prime', material:'純鈦', spec:'770ml', disc:false },
+    { id:genId(), seriesId:'s5', oldName:'Pure Ti 純鈦渾圓杯 770ml', displayName:'渾圓杯 純鈦', shortName:'渾圓 Classic Ti', fullName:'WOKY 渾圓杯 純鈦 Classic 770ml', suffix:'Classic', material:'純鈦', spec:'770ml', disc:false },
+    // 渾圓 陶瓷
+    { id:genId(), seriesId:'s6', oldName:'[●●]渾圓杯－雙層陶瓷550ml', displayName:'渾圓杯 陶瓷', shortName:'渾圓 陶瓷', fullName:'WOKY 渾圓杯 雙層陶瓷 Classic 550ml', suffix:'Classic', material:'陶瓷', spec:'550ml', disc:false },
+    { id:genId(), seriesId:'s6', oldName:'[●●]渾圓杯－雙層陶瓷750ml', displayName:'渾圓杯 陶瓷', shortName:'渾圓 陶瓷', fullName:'WOKY 渾圓杯 雙層陶瓷 Classic 750ml', suffix:'Classic', material:'陶瓷', spec:'750ml', disc:false },
+    { id:genId(), seriesId:'s6', oldName:'[●●]渾圓杯－本真系列 770ml', displayName:'渾圓杯 本真', shortName:'渾圓 本真', fullName:'WOKY 渾圓杯 無塗層 Classic 770ml', suffix:'Classic', material:'無塗層', spec:'770ml', disc:false },
+    // 渾圓 ECOZEN
+    { id:genId(), seriesId:'s7', oldName:'[●●]渾圓杯–ECOZEN® 880ml', displayName:'渾圓杯 透明', shortName:'渾圓 Essential', fullName:'WOKY 渾圓杯 ECOZEN Essential 880ml', suffix:'Essential', material:'ECOZEN', spec:'880ml', disc:false },
+    { id:genId(), seriesId:'s7', oldName:'[●●]渾圓又又杯–ECOZEN® 雙層750ml', displayName:'渾圓杯 透明雙層', shortName:'渾圓 Plus', fullName:'WOKY 渾圓杯 ECOZEN Plus 750ml', suffix:'Plus', material:'ECOZEN', spec:'750ml', disc:false },
+    // 提手 鈦陶瓷
+    { id:genId(), seriesId:'s8', oldName:'(運動瓶) 輕芯鈦提手運動保溫瓶600ml', displayName:'提手瓶 Go', shortName:'提手 Go S', fullName:'WOKY 提手系列 鈦陶瓷 Go 600ml', suffix:'Go', material:'鈦陶瓷', spec:'600ml', disc:false },
+    { id:genId(), seriesId:'s8', oldName:'(運動瓶) 輕芯鈦提手運動保溫瓶850ml', displayName:'提手瓶 Go', shortName:'提手 Go L', fullName:'WOKY 提手系列 鈦陶瓷 Go 850ml', suffix:'Go', material:'鈦陶瓷', spec:'850ml', disc:false },
+    { id:genId(), seriesId:'s8', oldName:'(漸層色運動瓶) 輕芯鈦提手運動保溫瓶850ml', displayName:'提手瓶 Go 漸層', shortName:'提手 Go 漸層', fullName:'WOKY 提手系列 鈦陶瓷 Go 850ml 漸層', suffix:'Go', material:'鈦陶瓷', spec:'850ml', disc:false },
+    { id:genId(), seriesId:'s8', oldName:'(銅蓋提手) 提手輕芯鈦瓷易潔層保溫瓶500ml', displayName:'提手瓶 Classic 銅蓋', shortName:'提手 Classic', fullName:'WOKY 提手系列 鈦陶瓷 Classic 500/800/1200ml', suffix:'Classic', material:'鈦陶瓷', spec:'500-1200ml', disc:false },
+    { id:genId(), seriesId:'s8', oldName:'(TIKO杯) TIKO輕芯鈦陶瓷保溫杯500ml', displayName:'提手杯 Lite TIKO', shortName:'提手 Lite', fullName:'WOKY 提手系列 鈦陶瓷 Lite 500ml', suffix:'Lite', material:'鈦陶瓷', spec:'500ml', disc:false },
+    // 提手 純鈦
+    { id:genId(), seriesId:'s9', oldName:'純鈦提手運動保溫瓶800ml', displayName:'提手瓶 Go 純鈦', shortName:'提手 Ti Go', fullName:'WOKY 提手系列 純鈦 Go 800ml', suffix:'Go', material:'純鈦', spec:'800ml', disc:false },
+    // 彈蓋 鈦陶瓷
+    { id:genId(), seriesId:'s10', oldName:'(胖胖杯) All-P 輕芯鈦瓷雙飲保溫瓶500ml', displayName:'彈蓋杯 Essential All-P', shortName:'彈蓋 Essential', fullName:'WOKY 彈蓋系列 鈦陶瓷 Essential 500ml', suffix:'Essential', material:'鈦陶瓷', spec:'500ml', disc:false },
+    { id:genId(), seriesId:'s10', oldName:'All-P 輕芯鈦瓷雙飲保溫瓶780ml', displayName:'彈蓋杯 Plus All-P', shortName:'彈蓋 Plus', fullName:'WOKY 彈蓋系列 鈦陶瓷 Plus 780ml', suffix:'Plus', material:'鈦陶瓷', spec:'780ml', disc:false },
+    { id:genId(), seriesId:'s10', oldName:'(碗豆/彈蓋杯) 輕量輕芯鈦瓷彈蓋保溫瓶450ml', displayName:'彈蓋杯 Lite 碗豆', shortName:'彈蓋 Lite', fullName:'WOKY 彈蓋系列 鈦陶瓷 Lite 450ml', suffix:'Lite', material:'鈦陶瓷', spec:'450ml', disc:false },
+    { id:genId(), seriesId:'s10', oldName:'碗豆/彈蓋杯 600ml', displayName:'彈蓋杯 Go 碗豆', shortName:'彈蓋 Go', fullName:'WOKY 彈蓋系列 鈦陶瓷 Go 600ml', suffix:'Go', material:'鈦陶瓷', spec:'600ml', disc:false },
+    // 彈蓋 TRITAN
+    { id:genId(), seriesId:'s11', oldName:'All-P TRITAN隨身雙飲杯500ml', displayName:'彈蓋杯 Daily All-P', shortName:'彈蓋 Daily', fullName:'WOKY 彈蓋系列 TRITAN Daily 500ml', suffix:'Daily', material:'TRITAN', spec:'500ml', disc:false },
+    // 帽子
+    { id:genId(), seriesId:'s12', oldName:'360°輕芯鈦瓷易潔層雙蓋保溫杯250ml', displayName:'帽子杯 Lite', shortName:'帽子 Lite', fullName:'WOKY 帽子系列 鈦陶瓷 Lite 250ml', suffix:'Lite', material:'鈦陶瓷', spec:'250ml', disc:false },
+    { id:genId(), seriesId:'s12', oldName:'360°輕芯鈦瓷易潔層雙蓋保溫杯500ml', displayName:'帽子杯 Essential', shortName:'帽子 Essential', fullName:'WOKY 帽子系列 鈦陶瓷 Essential 500ml', suffix:'Essential', material:'鈦陶瓷', spec:'500ml', disc:false },
+    { id:genId(), seriesId:'s12', oldName:'(帽吸杯) WOKY 輕芯鈦瓷易潔層吸管保溫杯600ml', displayName:'帽子杯 Go 吸管', shortName:'帽子 Go', fullName:'WOKY 帽子系列 鈦陶瓷 Go 600ml', suffix:'Go', material:'鈦陶瓷', spec:'600ml', disc:false },
+    // 陶瓷
+    { id:genId(), seriesId:'s13', oldName:'(T580) 極簡輕量陶瓷保溫瓶580ML', displayName:'陶瓷瓶 Lite', shortName:'陶瓷 Lite', fullName:'WOKY 陶瓷系列 Lite 580ml', suffix:'Lite', material:'陶瓷', spec:'580ml', disc:false },
+    { id:genId(), seriesId:'s13', oldName:'(T500) 陶瓷環保提手杯500ML', displayName:'陶瓷杯 Essential 環保提手', shortName:'陶瓷 Essential', fullName:'WOKY 陶瓷系列 Essential 500ml', suffix:'Essential', material:'陶瓷', spec:'500ml', disc:false },
+    { id:genId(), seriesId:'s13', oldName:'(C400) 輕量隨行陶瓷保溫瓶400ML', displayName:'陶瓷瓶 Daily', shortName:'陶瓷 Daily', fullName:'WOKY 陶瓷系列 Daily 400ml', suffix:'Daily', material:'陶瓷', spec:'400ml', disc:false },
+    { id:genId(), seriesId:'s13', oldName:'(S260) 輕量隨行陶瓷保溫瓶260ml', displayName:'陶瓷瓶 Lite Mini', shortName:'陶瓷 Lite Mini', fullName:'WOKY 陶瓷系列 Lite 260ml', suffix:'Lite', material:'陶瓷', spec:'260ml', disc:false },
+    { id:genId(), seriesId:'s13', oldName:'大口真瓷食物長鮮保溫罐 600ML', displayName:'食物罐 Essential', shortName:'食物罐', fullName:'WOKY 陶瓷系列 食物罐 Essential 600ml', suffix:'Essential', material:'陶瓷', spec:'600ml', disc:false },
+    // 純鈦
+    { id:genId(), seriesId:'s14', oldName:'純鈦保溫隨行杯200ml', displayName:'隨行瓶 Lite', shortName:'純鈦 Lite', fullName:'WOKY 純鈦系列 Lite 200ml', suffix:'Lite', material:'純鈦', spec:'200ml', disc:false },
+    { id:genId(), seriesId:'s14', oldName:'極輕純鈦保溫瓶 900ml (MBTI杯)', displayName:'保溫瓶 Max MBTI', shortName:'純鈦 Max', fullName:'WOKY 純鈦系列 Max 900ml', suffix:'Max', material:'純鈦', spec:'900ml', disc:false },
+    { id:genId(), seriesId:'s14', oldName:'VERVE 零秒瓶 (780ml)', displayName:'VERVE Go 零秒瓶', shortName:'VERVE Go', fullName:'WOKY VERVE 純鈦 Go 780ml', suffix:'Go', material:'純鈦', spec:'780ml', disc:false },
+    { id:genId(), seriesId:'s14', oldName:'QA Bottle 純鈦保溫瓶 (600ml)', displayName:'QA Bottle Essential', shortName:'QA Essential', fullName:'WOKY QA Bottle 純鈦 Essential 600ml', suffix:'Essential', material:'純鈦', spec:'600ml', disc:false },
+    { id:genId(), seriesId:'s14', oldName:'Hold On Bottle 運運杯(750ml)', displayName:'Hold On Daily', shortName:'Hold On', fullName:'WOKY Hold On 純鈦 Daily 750ml', suffix:'Daily', material:'純鈦', spec:'750ml', disc:false },
+    // ECOZEN
+    { id:genId(), seriesId:'s15', oldName:'ECOZEN® 透明瓶600ml', displayName:'透明瓶 Essential', shortName:'ECOZEN Essential', fullName:'WOKY 透明系列 ECOZEN Essential 600ml', suffix:'Essential', material:'ECOZEN', spec:'600ml', disc:false },
+    { id:genId(), seriesId:'s15', oldName:'ECOZEN® 透明瓶800ml', displayName:'透明瓶 Plus', shortName:'ECOZEN Plus', fullName:'WOKY 透明系列 ECOZEN Plus 800ml', suffix:'Plus', material:'ECOZEN', spec:'800ml', disc:false },
+  ],
+  discontinued: []
+};
+
+// ── COLOR PALETTE ─────────────────────────────────────────────────
+const DEFAULT_COLORS = {
+  '鈦陶瓷': '#2e8b6e',
+  '純鈦':   '#607080',
+  '陶瓷':   '#d97a2a',
+  'ECOZEN': '#1a7fa8',
+  'TRITAN': '#4a6abf',
+  '無塗層': '#888880',
+  'TICERA': '#bf3a5a',
+  '過期':   '#aaaaaa',
+};
+const SWATCHES = [
+  '#2e8b6e','#1a7fa8','#4a6abf','#7a4abf',
+  '#bf4a9a','#d94f4f','#d97a2a','#c8b020',
+  '#5aaa3a','#20908a','#e05050','#e07830',
+  '#3a5fcc','#9c3abf','#bf3a5a','#607080',
+];
+
+const SUFFIX_LIST = ['Classic','Pro','Core','Go','Lite','Daily','Essential','Plus','Max','Prime','Signature','Elite'];
+const DEFAULT_SUFFIX_COLORS = {
+  'Classic':'#5a6a7a','Pro':'#2e6a5a','Core':'#4a5a8a','Go':'#7a4a2a',
+  'Lite':'#8a7a4a','Daily':'#6a5a8a','Essential':'#4a7a6a','Plus':'#7a4a6a',
+  'Max':'#2a4a7a','Prime':'#6a3a5a','Signature':'#3a5a4a','Elite':'#5a3a2a',
+};
+
+const SUFFIX_MEMO_DEFAULT = {
+  '科技與效能升級': {
+    color:'#2e6a5a',
+    items:[
+      {suffix:'Pro',   desc:'升級版本，效能明顯提升，針對進階使用者設計'},
+      {suffix:'Max',   desc:'最高規格，材質或容量達到系列極限'},
+      {suffix:'Prime', desc:'頂級定位，旗艦等級的體驗與品質'},
+    ]
+  },
+  '日常生活派': {
+    color:'#4a5a8a',
+    items:[
+      {suffix:'Core',      desc:'核心款，最能代表系列特色的標準版本'},
+      {suffix:'Essential', desc:'必備款，滿足日常所需的基礎配備'},
+      {suffix:'Daily',     desc:'日日使用，設計重點在輕鬆融入生活習慣'},
+    ]
+  },
+  '傳承與入門': {
+    color:'#5a6a7a',
+    items:[
+      {suffix:'Classic', desc:'經典保留版，沿用原始設計與工藝的初代精神'},
+      {suffix:'Lite',    desc:'輕量入門款，體積更小或功能更精簡的選擇'},
+    ]
+  },
+  '移動與場景': {
+    color:'#7a4a2a',
+    items:[
+      {suffix:'Go',   desc:'動態場景設計，適合通勤、戶外、隨行使用'},
+      {suffix:'Plus', desc:'加強版本，容量、功能或配件有所擴充'},
+    ]
+  },
+  '身份與限定': {
+    color:'#6a3a5a',
+    items:[
+      {suffix:'Signature', desc:'聯名或特仕款，具備獨特設計語言或合作背景'},
+      {suffix:'Elite',     desc:'限量高端版，強調稀有性與收藏價值'},
+    ]
+  },
+};
+
+// ── SUFFIX TAG COMPONENT ──────────────────────────────────────────
+function SuffixTag({ suffix, color, onColorChange, onSuffixChange }) {
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState(suffix);
+  const ref = useRef();
+  const inputRef = useRef();
+  useEffect(() => setEditVal(suffix), [suffix]);
+  useEffect(() => {
+    const close = (e) => { if(ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+  const commit = () => { setEditing(false); if(editVal !== suffix) onSuffixChange(editVal.trim()); };
+  if (!suffix) return null;
+  return (
+    <span ref={ref} style={{position:'relative',display:'inline-flex',alignItems:'center',flexShrink:0}}>
+      {editing ? (
+        <input ref={inputRef} value={editVal}
+          onChange={e=>setEditVal(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e=>{if(e.key==='Enter'||e.key==='Escape')commit(); e.stopPropagation();}}
+          onClick={e=>e.stopPropagation()}
+          style={{background:color,color:'#fff',border:'none',outline:'none',fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:700,padding:'3px 9px',borderRadius:20,width:72,textAlign:'center'}}
+          autoFocus />
+      ) : (
+        <span
+          style={{background:color,color:'#fff',fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:700,padding:'3px 9px',borderRadius:20,cursor:'pointer',userSelect:'none',letterSpacing:'0.3px'}}
+          onClick={e=>{e.stopPropagation();setOpen(o=>!o);}}
+          onDoubleClick={e=>{e.stopPropagation();setOpen(false);setEditing(true);setTimeout(()=>inputRef.current&&inputRef.current.select(),30);}}
+          title="點擊選色 · 雙擊改名稱">{suffix}</span>
+      )}
+      {open && (
+        <div className="color-popup" onClick={e=>e.stopPropagation()} style={{minWidth:190,left:'auto',right:0}}>
+          <div style={{width:'100%',marginBottom:6,fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:700,color:'#aaa',letterSpacing:1}}>快選後綴詞</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:4,width:'100%',marginBottom:8}}>
+            {SUFFIX_LIST.map(s=>(
+              <span key={s}
+                onClick={()=>{onSuffixChange(s);onColorChange(DEFAULT_SUFFIX_COLORS[s]||color);setOpen(false);}}
+                style={{cursor:'pointer',background:DEFAULT_SUFFIX_COLORS[s]||'#888',color:'#fff',fontSize:'8px',fontWeight:700,padding:'2px 7px',borderRadius:20,fontFamily:'Noto Sans TC,sans-serif'}}>{s}</span>
+            ))}
+            <span onClick={()=>{onSuffixChange('');setOpen(false);}}
+              style={{cursor:'pointer',background:'#eee',color:'#999',fontSize:'8px',fontWeight:700,padding:'2px 7px',borderRadius:20,fontFamily:'Noto Sans TC,sans-serif'}}>✕ 移除</span>
+          </div>
+          <div style={{width:'100%',marginBottom:4,fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:700,color:'#aaa',letterSpacing:1}}>顏色</div>
+          {SWATCHES.map(c=>(
+            <div key={c} className={'color-swatch'+(c===color?' active':'')} style={{background:c}} onClick={()=>{onColorChange(c);setOpen(false);}} />
+          ))}
+          <input type="color" className="color-picker-input" value={color} onChange={e=>onColorChange(e.target.value)} />
+        </div>
+      )}
+    </span>
+  );
+}
+
+// ── COLOR PICKER COMPONENT ────────────────────────────────────────
+function TagColorPicker({ material, color, onColorChange, onMaterialChange }) {
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState(material);
+  const ref = useRef();
+  const inputRef = useRef();
+
+  useEffect(() => setEditVal(material), [material]);
+
+  useEffect(() => {
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+
+  const commitEdit = () => {
+    setEditing(false);
+    if (editVal.trim() && editVal !== material) onMaterialChange(editVal.trim());
+  };
+
+  return (
+    <span ref={ref} style={{position:'relative',display:'inline-block',flexShrink:0}}>
+      {editing ? (
+        <input
+          ref={inputRef}
+          value={editVal}
+          onChange={e => setEditVal(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={e => { if(e.key==='Enter'||e.key==='Escape') commitEdit(); e.stopPropagation(); }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: color, color:'#fff', border:'none', outline:'none',
+            fontFamily:'Noto Sans TC,sans-serif', fontSize:'9px', fontWeight:700,
+            padding:'2px 7px', borderRadius:10, width:72, textAlign:'center',
+          }}
+          autoFocus
+        />
+      ) : (
+        <span
+          className="material-tag"
+          style={{background: color, cursor:'pointer', userSelect:'none'}}
+          onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+          onDoubleClick={e => { e.stopPropagation(); setOpen(false); setEditing(true); setTimeout(()=>inputRef.current?.select(),30); }}
+          title="點擊選色 · 雙擊改名稱"
+        >{material}</span>
+      )}
+      {open && (
+        <div className="color-popup" onClick={e=>e.stopPropagation()}>
+          {SWATCHES.map(c => (
+            <div key={c} className={`color-swatch ${c===color?'active':''}`}
+              style={{background:c}}
+              onClick={() => { onColorChange(c); setOpen(false); }} />
+          ))}
+          <input type="color" className="color-picker-input" value={color}
+            onChange={e => onColorChange(e.target.value)} />
+          <button
+            style={{width:'100%',marginTop:6,padding:'4px 0',fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:500,background:'#f5f0e8',border:'1px solid #ddd',borderRadius:2,cursor:'pointer',color:'#666'}}
+            onClick={() => { onColorChange(DEFAULT_COLORS[material] || '#999'); setOpen(false); }}
+          >復原預設色</button>
+        </div>
+      )}
+    </span>
+  );
+}
+const MODES = [
+  { key:'display', label:'展示名稱', field:'displayName' },
+  { key:'short',   label:'簡稱',     field:'shortName' },
+  { key:'full',    label:'完整品名', field:'fullName' },
+  { key:'old',     label:'舊名稱',   field:'oldName' },
+  { key:'all',     label:'全部',     field:null },
+];
+
+// ── INLINE EDIT ───────────────────────────────────────────────────
+function InlineEdit({ value, onChange, style={}, className='' }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value);
+  const ref = useRef();
+  useEffect(() => setVal(value), [value]);
+  if (!editing) return (
+    <span style={style} className={className} onDoubleClick={() => { setEditing(true); setTimeout(() => ref.current?.select(), 50); }}
+      title="雙擊編輯">{value || '—'}</span>
+  );
+  return <input ref={ref} className="inline-edit" style={style} value={val}
+    onChange={e => setVal(e.target.value)}
+    onBlur={() => { setEditing(false); onChange(val); }}
+    onKeyDown={e => { if(e.key==='Enter'||e.key==='Escape') { setEditing(false); onChange(val); }}} />;
+}
+
+// ── STORAGE ───────────────────────────────────────────────────────
+const STORAGE_KEY = 'woky_naming_tool_v1';
+function loadSaved() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if(r) return JSON.parse(r); } catch(e){}
+  return null;
+}
+
+
+
+// ── MEMO SIDEBAR COMPONENT ───────────────────────────────────────
+function MemoSidebar({ suffixMemo, setSuffixMemo, suffixColors, setSuffixColors, onClose }) {
+  const [editingCat, setEditingCat] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [newCatName, setNewCatName] = useState('');
+  const [addingCat, setAddingCat] = useState(false);
+  const [newCatInput, setNewCatInput] = useState('');
+  const [dragItem, setDragItem] = useState(null);
+  const [dragOverItem, setDragOverItem] = useState(null);
+
+  const save = (next) => {
+    setSuffixMemo(next);
+    try { localStorage.setItem('woky_suffix_memo', JSON.stringify(next)); } catch(e){}
+  };
+
+  const renameCat = (oldKey, newKey) => {
+    if (!newKey.trim() || newKey === oldKey) return;
+    const entries = Object.entries(suffixMemo);
+    const idx = entries.findIndex(([k])=>k===oldKey);
+    entries[idx] = [newKey.trim(), entries[idx][1]];
+    save(Object.fromEntries(entries));
+    setEditingCat(null);
+  };
+
+  const deleteCat = (cat) => {
+    if (!window.confirm(`刪除「${cat}」整個分類？`)) return;
+    const next = {...suffixMemo};
+    delete next[cat];
+    save(next);
+  };
+
+  const addCat = () => {
+    if (!newCatInput.trim()) return;
+    save({...suffixMemo, [newCatInput.trim()]: {color:'#888', items:[]}});
+    setNewCatInput('');
+    setAddingCat(false);
+  };
+
+  const updateItem = (cat, idx, field, val) => {
+    const items = [...suffixMemo[cat].items];
+    items[idx] = {...items[idx], [field]: val};
+    save({...suffixMemo, [cat]: {...suffixMemo[cat], items}});
+  };
+
+  const deleteItem = (cat, idx) => {
+    const items = suffixMemo[cat].items.filter((_,i)=>i!==idx);
+    save({...suffixMemo, [cat]: {...suffixMemo[cat], items}});
+  };
+
+  const reorderItems = (cat, fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return;
+    const items = [...suffixMemo[cat].items];
+    const [moved] = items.splice(fromIdx, 1);
+    items.splice(toIdx, 0, moved);
+    save({...suffixMemo, [cat]: {...suffixMemo[cat], items}});
+  };
+
+  const addItem = (cat) => {
+    const items = [...suffixMemo[cat].items, {suffix:'', desc:''}];
+    save({...suffixMemo, [cat]: {...suffixMemo[cat], items}});
+    setEditingItem({cat, idx: items.length - 1});
+  };
+
+  const updateCatColor = (cat, color) => {
+    save({...suffixMemo, [cat]: {...suffixMemo[cat], color}});
+  };
+
+  return (
+    <div style={{position:'fixed',top:0,right:0,bottom:0,width:'min(380px, 100vw)',background:'#fff',borderLeft:'1px solid #e2ddd8',zIndex:150,display:'flex',flexDirection:'column',boxShadow:'-8px 0 40px rgba(0,0,0,0.08)'}}>
+      {/* Header */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px 16px',borderBottom:'1px solid #e2ddd8',flexShrink:0}}>
+        <div>
+          <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'15px',fontWeight:700,color:'#141210'}}>後綴詞分類備忘</div>
+          <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',color:'#9a9088',marginTop:2}}>雙擊分類名稱或後綴詞可編輯</div>
+        </div>
+        <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:'18px',color:'#9a9088',lineHeight:1}}>✕</button>
+      </div>
+
+      {/* Body */}
+      <div style={{overflowY:'auto',flex:1,padding:'20px 24px'}}>
+        {Object.entries(suffixMemo).map(([cat, val]) => (
+          <div key={cat} style={{marginBottom:28}}>
+            {/* Category header */}
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+              <div style={{position:'relative',width:14,height:14,borderRadius:4,background:val.color,flexShrink:0,overflow:'hidden',cursor:'pointer'}} title="改分類顏色">
+                <input type="color" value={val.color} onChange={e=>updateCatColor(cat,e.target.value)}
+                  style={{position:'absolute',inset:0,opacity:0,width:'100%',height:'100%',cursor:'pointer',border:'none',padding:0}} />
+              </div>
+              {editingCat === cat ? (
+                <input autoFocus value={newCatName} onChange={e=>setNewCatName(e.target.value)}
+                  onBlur={()=>renameCat(cat,newCatName)}
+                  onKeyDown={e=>{if(e.key==='Enter')renameCat(cat,newCatName);if(e.key==='Escape')setEditingCat(null);}}
+                  style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'12px',fontWeight:700,color:'#141210',border:'none',borderBottom:'1.5px solid #141210',outline:'none',background:'transparent',flex:1}} />
+              ) : (
+                <span onDoubleClick={()=>{setEditingCat(cat);setNewCatName(cat);}}
+                  style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'12px',fontWeight:700,color:'#141210',cursor:'text',flex:1}}
+                  title="雙擊改名">{cat}</span>
+              )}
+              <button onClick={()=>addItem(cat)}
+                style={{background:'none',border:'1px dashed #ccc',borderRadius:20,fontSize:'9px',fontWeight:700,color:'#aaa',padding:'2px 8px',cursor:'pointer',flexShrink:0,fontFamily:'Noto Sans TC,sans-serif'}}>+ 後綴</button>
+              <button onClick={()=>deleteCat(cat)}
+                style={{background:'none',border:'none',fontSize:'12px',color:'#ddd',cursor:'pointer',flexShrink:0,lineHeight:1}} title="刪除分類">✕</button>
+            </div>
+
+            {/* Items */}
+            <div style={{display:'flex',flexDirection:'column',gap:2,paddingLeft:8}}>
+              {val.items.map((item, idx) => (
+                <div key={idx}
+                  draggable
+                  onDragStart={()=>setDragItem({cat,idx})}
+                  onDragOver={e=>{e.preventDefault();setDragOverItem({cat,idx});}}
+                  onDragLeave={()=>setDragOverItem(null)}
+                  onDrop={()=>{if(dragItem&&dragItem.cat===cat)reorderItems(cat,dragItem.idx,idx);setDragItem(null);setDragOverItem(null);}}
+                  onDragEnd={()=>{setDragItem(null);setDragOverItem(null);}}
+                  style={{display:'flex',gap:8,alignItems:'flex-start',padding:'6px 6px',borderRadius:8,
+                    background:dragOverItem?.cat===cat&&dragOverItem?.idx===idx?'#ede9e4':'transparent',
+                    opacity:dragItem?.cat===cat&&dragItem?.idx===idx?0.4:1,cursor:'default'}}>
+                  {/* Drag handle */}
+                  <span style={{color:'#ccc',fontSize:'11px',cursor:'grab',flexShrink:0,marginTop:5,userSelect:'none',lineHeight:1}}>⠿</span>
+                  {/* Suffix color swatch */}
+                  <div style={{width:24,height:24,borderRadius:6,background:suffixColors[item.suffix]||val.color,cursor:'pointer',position:'relative',overflow:'hidden',flexShrink:0,marginTop:2}}>
+                    <input type="color"
+                      value={suffixColors[item.suffix]||val.color}
+                      onChange={e=>setSuffixColors(sc=>({...sc,[item.suffix]:e.target.value}))}
+                      style={{position:'absolute',inset:0,opacity:0,width:'100%',height:'100%',cursor:'pointer',border:'none',padding:0}} />
+                  </div>
+                  {/* Suffix text editable */}
+                  {editingItem?.cat===cat && editingItem?.idx===idx ? (
+                    <input autoFocus value={item.suffix}
+                      onChange={e=>updateItem(cat,idx,'suffix',e.target.value)}
+                      onBlur={()=>setEditingItem(null)}
+                      onKeyDown={e=>{if(e.key==='Enter'||e.key==='Escape')setEditingItem(null);}}
+                      placeholder="後綴詞"
+                      style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'11px',fontWeight:700,color:'#141210',border:'none',borderBottom:'1.5px solid #141210',outline:'none',background:'transparent',width:60,marginTop:3}} />
+                  ) : (
+                    <span onDoubleClick={()=>setEditingItem({cat,idx})}
+                      style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'11px',fontWeight:700,color:'#141210',cursor:'text',width:60,flexShrink:0,marginTop:3}}
+                      title="雙擊改後綴詞">{item.suffix || '—'}</span>
+                  )}
+                  {/* Desc — textarea auto height */}
+                  <textarea value={item.desc}
+                    onChange={e=>updateItem(cat,idx,'desc',e.target.value)}
+                    placeholder="說明文字"
+                    rows={1}
+                    ref={el=>{if(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}}}
+                    style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'11px',color:'#6a6060',lineHeight:'1.6',border:'none',borderBottom:'1px solid transparent',outline:'none',background:'transparent',flex:1,padding:'2px 0',resize:'none',overflow:'hidden',fieldSizing:'content'}}
+                    onFocus={e=>e.target.style.borderBottomColor='#ccc'}
+                    onBlur={e=>e.target.style.borderBottomColor='transparent'}
+                    onInput={e=>{e.target.style.height='auto';e.target.style.height=e.target.scrollHeight+'px';}} />
+                  {/* Delete — always visible */}
+                  <button onClick={()=>deleteItem(cat,idx)}
+                    style={{background:'none',border:'none',fontSize:'13px',color:'#bbb',cursor:'pointer',flexShrink:0,lineHeight:1,padding:'2px 4px',marginTop:2,borderRadius:4}}
+                    onMouseEnter={e=>e.currentTarget.style.color='#e05050'}
+                    onMouseLeave={e=>e.currentTarget.style.color='#bbb'}
+                    title="刪除">✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* Add category */}
+        {addingCat ? (
+          <div style={{display:'flex',gap:8,alignItems:'center',marginTop:8}}>
+            <input autoFocus value={newCatInput} onChange={e=>setNewCatInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==='Enter')addCat();if(e.key==='Escape')setAddingCat(false);}}
+              placeholder="新分類名稱"
+              style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'12px',border:'none',borderBottom:'1.5px solid #141210',outline:'none',background:'transparent',flex:1}} />
+            <button onClick={addCat} style={{background:'#141210',color:'#fff',border:'none',borderRadius:20,padding:'4px 12px',fontSize:'10px',fontWeight:700,cursor:'pointer',fontFamily:'Noto Sans TC,sans-serif'}}>新增</button>
+            <button onClick={()=>setAddingCat(false)} style={{background:'none',border:'1px solid #e2ddd8',borderRadius:20,padding:'4px 12px',fontSize:'10px',color:'#aaa',cursor:'pointer',fontFamily:'Noto Sans TC,sans-serif'}}>取消</button>
+          </div>
+        ) : (
+          <button onClick={()=>setAddingCat(true)}
+            style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,color:'#9a9088',background:'transparent',border:'1px dashed #ccc',borderRadius:20,padding:'6px 16px',cursor:'pointer',width:'100%',marginTop:4}}>
+            + 新增分類
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────
+function App() {
+  const _saved = loadSaved();
+  const [data, setData] = useState(_saved?.data || ({"categories":[{"id":"c1","label":"鍋具 Cookware"},{"id":"c2","label":"杯瓶類 · 渾圓系列 Tumbler Family"},{"id":"c3","label":"杯瓶類 · 提手系列 Handle Family"},{"id":"c4","label":"杯瓶類 · 彈蓋系列 Flip-Lid Family"},{"id":"c5","label":"杯瓶類 · 帽子系列 Cap Family"},{"id":"c6","label":"杯瓶類 · 陶瓷系列 Ceramic Collection"},{"id":"c7","label":"杯瓶類 · 純鈦 & 透明 Pure Ti & ECOZEN"}],"series":[{"id":"s1","catId":"c1","name":"恰恰系列","en":"Qaqa Series"},{"id":"s2","catId":"c1","name":"哈哈系列","en":"Haha Series"},{"id":"s3","catId":"c1","name":"塔塔系列","en":"Tata Series"},{"id":"s4","catId":"c2","name":"渾圓杯 鈦陶瓷","en":"Ti-Ceramic Tumbler"},{"id":"s5","catId":"c2","name":"渾圓杯 純鈦","en":"Pure Ti Tumbler"},{"id":"s6","catId":"c2","name":"渾圓杯 陶瓷/無塗層","en":"Ceramic / Uncoated"},{"id":"s7","catId":"c2","name":"渾圓杯 透明","en":"ECOZEN Tumbler"},{"id":"s8","catId":"c3","name":"提手系列 鈦陶瓷","en":"Ti-Ceramic Handle"},{"id":"s9","catId":"c3","name":"提手系列 純鈦","en":"Pure Ti Handle"},{"id":"s10","catId":"c4","name":"彈蓋系列 鈦陶瓷","en":"Ti-Ceramic Flip"},{"id":"s11","catId":"c4","name":"","en":"TRITAN Flip"},{"id":"s12","catId":"c5","name":"帽子系列 鈦陶瓷","en":"Ti-Ceramic Cap"},{"id":"s13","catId":"c6","name":"陶瓷系列","en":"Ceramic Series"},{"id":"s14","catId":"c7","name":"純鈦隨行系列","en":"Pure Ti Portable"},{"id":"s15","catId":"c7","name":"透明隨行系列","en":"ECOZEN Portable"}],"products":[{"id":"at3c5d8","seriesId":"s1","oldName":"26cm 恰恰鍋－深煎鍋","displayName":"恰恰鍋 深煎","shortName":"恰恰 深煎","fullName":"WOKY 恰恰系列 深煎鍋","suffix":"","material":"無塗層","spec":"26cm","disc":false},{"id":"wrnz9zq","seriesId":"s1","oldName":"28cm 恰恰鍋－淺煎鍋","displayName":"恰恰鍋 淺煎","shortName":"恰恰 淺煎","fullName":"WOKY 恰恰系列 淺煎鍋","suffix":"","material":"無塗層","spec":"28cm","disc":false},{"id":"lrfyzoo","seriesId":"s1","oldName":"28cm 恰恰鍋－平煎鍋","displayName":"恰恰鍋 平煎","shortName":"恰恰 平煎","fullName":"WOKY 恰恰系列 平煎鍋","suffix":"","material":"無塗層","spec":"28cm","disc":false},{"id":"bj8t1zb","seriesId":"s1","oldName":"32cm 恰恰鍋－炒鍋","displayName":"恰恰鍋 炒鍋","shortName":"恰恰 炒","fullName":"WOKY 恰恰系列 炒鍋","suffix":"","material":"無塗層","spec":"32cm","disc":false},{"id":"tn94tpw","seriesId":"s1","oldName":"16cm 恰恰鍋－湯鍋","displayName":"恰恰鍋 湯鍋","shortName":"恰恰 湯","fullName":"WOKY 恰恰系列 湯鍋","suffix":"","material":"無塗層","spec":"16cm","disc":false},{"id":"yi3q08y","seriesId":"s2","oldName":"26cm 哈哈鍋2.0－淺煎鍋","displayName":"哈哈鍋 淺煎","shortName":"哈哈 淺煎","fullName":"WOKY 哈哈系列 淺煎鍋 Classic","suffix":"Classic","material":"TICERA","spec":"26cm","disc":false},{"id":"4gxhirg","seriesId":"s2","oldName":"28cm 哈哈鍋2.0－深煎鍋","displayName":"哈哈鍋 深煎","shortName":"哈哈 深煎","fullName":"WOKY 哈哈系列 深煎鍋 Classic","suffix":"Classic","material":"TICERA","spec":"28cm","disc":false},{"id":"yw0addd","seriesId":"s2","oldName":"32cm 哈哈鍋2.0－深煎鍋","displayName":"哈哈鍋 深煎","shortName":"哈哈 深煎","fullName":"WOKY 哈哈系列 深煎鍋 Classic","suffix":"Classic","material":"TICERA","spec":"32cm","disc":false},{"id":"h39fx9c","seriesId":"s2","oldName":"26cm 哈哈鍋3.0－深煎鍋","displayName":"哈哈鍋 深煎","shortName":"哈哈 深煎 Pro","fullName":"WOKY 哈哈系列 深煎鍋 Pro","suffix":"Pro","material":"TICERA","spec":"26cm","disc":false},{"id":"elpl36u","seriesId":"s3","oldName":"22cm 塔塔鍋","displayName":"塔塔鍋","shortName":"塔塔","fullName":"WOKY 塔塔系列 炒鍋","suffix":"","material":"TICERA","spec":"22cm","disc":false},{"id":"afb2i30","seriesId":"s4","oldName":"[●●] 鈦陶瓷渾圓杯 770ml","displayName":"渾圓杯","shortName":"渾圓 Classic","fullName":"WOKY 渾圓杯 鈦陶瓷 Classic 770ml","suffix":"Classic","material":"鈦陶瓷","spec":"770ml","disc":false},{"id":"7w3rafb","seriesId":"s4","oldName":"[●●] 鈦陶瓷渾圓杯 3.0 MOZU","displayName":"渾圓杯 模組","shortName":"渾圓 Core","fullName":"WOKY 渾圓杯 鈦陶瓷 Core 770ml","suffix":"Core","material":"鈦陶瓷","spec":"770ml","disc":false},{"id":"glmrzxq","seriesId":"s5","oldName":"純鈦 Ti 渾圓杯 770ml","displayName":"渾圓杯 純鈦","shortName":"渾圓 Prime","fullName":"WOKY 渾圓杯 純鈦 Prime 770ml","suffix":"Prime","material":"純鈦","spec":"770ml","disc":false},{"id":"aaf2l6p","seriesId":"s5","oldName":"Pure Ti 純鈦渾圓杯 770ml","displayName":"渾圓杯 純鈦","shortName":"渾圓 Classic Ti","fullName":"WOKY 渾圓杯 純鈦 Classic 770ml","suffix":"Classic","material":"純鈦","spec":"770ml","disc":false},{"id":"7khfj94","seriesId":"s6","oldName":"[●●]渾圓杯－雙層陶瓷550ml","displayName":"渾圓杯 陶瓷","shortName":"渾圓 陶瓷","fullName":"WOKY 渾圓杯 雙層陶瓷 Classic 550ml","suffix":"Classic","material":"陶瓷","spec":"550ml","disc":false},{"id":"v6o6ilf","seriesId":"s6","oldName":"[●●]渾圓杯－雙層陶瓷750ml","displayName":"渾圓杯 陶瓷","shortName":"渾圓 陶瓷","fullName":"WOKY 渾圓杯 雙層陶瓷 Classic 750ml","suffix":"Classic","material":"陶瓷","spec":"750ml","disc":false},{"id":"q86gryb","seriesId":"s6","oldName":"[●●]渾圓杯－本真系列 770ml","displayName":"渾圓杯 本真","shortName":"渾圓 本真","fullName":"WOKY 渾圓杯 無塗層 Classic 770ml","suffix":"Classic","material":"無塗層","spec":"770ml","disc":false},{"id":"elp97an","seriesId":"s7","oldName":"[●●]渾圓杯–ECOZEN® 880ml","displayName":"渾圓杯 透明","shortName":"渾圓 Essential","fullName":"WOKY 渾圓杯 ECOZEN Essential 880ml","suffix":"Essential","material":"ECOZEN","spec":"880ml","disc":false},{"id":"ekviw58","seriesId":"s7","oldName":"[●●]渾圓又又杯–ECOZEN® 雙層750ml","displayName":"渾圓杯 透明雙層","shortName":"渾圓 Plus","fullName":"WOKY 渾圓杯 ECOZEN Plus 750ml","suffix":"Plus","material":"ECOZEN","spec":"750ml","disc":false},{"id":"3fj7ani","seriesId":"s8","oldName":"(運動瓶) 輕芯鈦提手運動保溫瓶600ml","displayName":"提手瓶 Go","shortName":"提手 Go S","fullName":"WOKY 提手系列 鈦陶瓷 Go 600ml","suffix":"Go","material":"鈦陶瓷","spec":"600ml","disc":false},{"id":"1uajz8x","seriesId":"s8","oldName":"(運動瓶) 輕芯鈦提手運動保溫瓶850ml","displayName":"提手瓶 Go","shortName":"提手 Go L","fullName":"WOKY 提手系列 鈦陶瓷 Go 850ml","suffix":"Go","material":"鈦陶瓷","spec":"850ml","disc":false},{"id":"e1dpc4y","seriesId":"s8","oldName":"(銅蓋提手) 提手輕芯鈦瓷易潔層保溫瓶500ml","displayName":"提手瓶 Classic 銅蓋","shortName":"提手 Classic","fullName":"WOKY 提手系列 鈦陶瓷 Classic 500/800/1200ml","suffix":"Classic","material":"鈦陶瓷","spec":"500-1200ml","disc":false},{"id":"ye6w323","seriesId":"s8","oldName":"(TIKO杯) TIKO輕芯鈦陶瓷保溫杯500ml","displayName":"提手杯 Lite TIKO","shortName":"提手 Lite","fullName":"WOKY 提手系列 鈦陶瓷 Lite 500ml","suffix":"Lite","material":"鈦陶瓷","spec":"500ml","disc":false},{"id":"ldidc8l","seriesId":"s9","oldName":"純鈦提手運動保溫瓶800ml","displayName":"提手瓶 Go 純鈦","shortName":"提手 Ti Go","fullName":"WOKY 提手系列 純鈦 Go 800ml","suffix":"Go","material":"純鈦","spec":"800ml","disc":false},{"id":"pfhlf64","seriesId":"s12","oldName":"360°輕芯鈦瓷易潔層雙蓋保溫杯250ml","displayName":"帽子杯 Lite","shortName":"帽子 Lite","fullName":"WOKY 帽子系列 鈦陶瓷 Lite 250ml","suffix":"Lite","material":"鈦陶瓷","spec":"250ml","disc":false},{"id":"81kgyyl","seriesId":"s12","oldName":"360°輕芯鈦瓷易潔層雙蓋保溫杯500ml","displayName":"帽子杯 Essential","shortName":"帽子 Essential","fullName":"WOKY 帽子系列 鈦陶瓷 Essential 500ml","suffix":"Essential","material":"鈦陶瓷","spec":"500ml","disc":false},{"id":"e9g75ze","seriesId":"s12","oldName":"(帽吸杯) WOKY 輕芯鈦瓷易潔層吸管保溫杯600ml","displayName":"帽子杯 Go 吸管","shortName":"帽子 Go","fullName":"WOKY 帽子系列 鈦陶瓷 Go 600ml","suffix":"Go","material":"鈦陶瓷","spec":"600ml","disc":false},{"id":"o9de5f1","seriesId":"s13","oldName":"(T580) 極簡輕量陶瓷保溫瓶580ML","displayName":"陶瓷瓶 Lite","shortName":"陶瓷 Lite","fullName":"WOKY 陶瓷系列 Lite 580ml","suffix":"Lite","material":"陶瓷","spec":"580ml","disc":false},{"id":"lz7behf","seriesId":"s13","oldName":"(T500) 陶瓷環保提手杯500ML","displayName":"陶瓷杯 Essential 環保提手","shortName":"陶瓷 Essential","fullName":"WOKY 陶瓷系列 Essential 500ml","suffix":"Essential","material":"陶瓷","spec":"500ml","disc":false},{"id":"a1is0r6","seriesId":"s13","oldName":"(C400) 輕量隨行陶瓷保溫瓶400ML","displayName":"陶瓷瓶 Daily","shortName":"陶瓷 Daily","fullName":"WOKY 陶瓷系列 Daily 400ml","suffix":"Daily","material":"陶瓷","spec":"400ml","disc":false},{"id":"yohvqz4","seriesId":"s13","oldName":"大口真瓷食物長鮮保溫罐 600ML","displayName":"食物罐 Essential","shortName":"食物罐","fullName":"WOKY 陶瓷系列 食物罐 Essential 600ml","suffix":"Essential","material":"陶瓷","spec":"600ml","disc":false},{"id":"xp5x4xg","seriesId":"s14","oldName":"純鈦保溫隨行杯200ml","displayName":"隨行瓶 Lite","shortName":"純鈦 Lite","fullName":"WOKY 純鈦系列 Lite 200ml","suffix":"Lite","material":"純鈦","spec":"200ml","disc":false},{"id":"xrwuq16","seriesId":"s14","oldName":"極輕純鈦保溫瓶 900ml (MBTI杯)","displayName":"保溫瓶 Max MBTI","shortName":"純鈦 Max","fullName":"WOKY 純鈦系列 Max 900ml","suffix":"Max","material":"純鈦","spec":"900ml","disc":false},{"id":"s6xlmmh","seriesId":"s14","oldName":"VERVE 零秒瓶 (780ml)","displayName":"VERVE Go 零秒瓶","shortName":"VERVE Go","fullName":"WOKY VERVE 純鈦 Go 780ml","suffix":"Go","material":"純鈦","spec":"780ml","disc":false},{"id":"rfh7uf9","seriesId":"s14","oldName":"QA Bottle 純鈦保溫瓶 (600ml)","displayName":"QA Bottle Essential","shortName":"QA Essential","fullName":"WOKY QA Bottle 純鈦 Essential 600ml","suffix":"Essential","material":"純鈦","spec":"600ml","disc":false},{"id":"cjntf9d","seriesId":"s14","oldName":"Hold On Bottle 運運杯(750ml)","displayName":"Hold On Daily","shortName":"Hold On","fullName":"WOKY Hold On 純鈦 Daily 750ml","suffix":"Daily","material":"純鈦","spec":"750ml","disc":false},{"id":"ok8lout","seriesId":"s15","oldName":"ECOZEN® 透明瓶600ml","displayName":"透明瓶 Essential","shortName":"ECOZEN Essential","fullName":"WOKY 透明系列 ECOZEN Essential 600ml","suffix":"Essential","material":"ECOZEN","spec":"600ml","disc":false},{"id":"ert50lq","seriesId":"s15","oldName":"ECOZEN® 透明瓶800ml","displayName":"透明瓶 Plus","shortName":"ECOZEN Plus","fullName":"WOKY 透明系列 ECOZEN Plus 800ml","suffix":"Plus","material":"ECOZEN","spec":"800ml","disc":false},{"id":"jt3t79y","seriesId":"s10","oldName":"","displayName":"**新款彈蓋杯**","shortName":"**新款彈蓋杯**","fullName":"WOKY **新款彈蓋杯**","suffix":"","material":"鈦陶瓷","spec":"","disc":false}],"discontinued":[{"id":"ua8p8pm","seriesId":"s13","oldName":"(S260) 輕量隨行陶瓷保溫瓶260ml","displayName":"陶瓷瓶 Lite Mini","shortName":"陶瓷 Lite Mini","fullName":"WOKY 陶瓷系列 Lite 260ml","suffix":"Lite","material":"陶瓷","spec":"260ml","disc":true},{"id":"bn01xyj","seriesId":"s8","oldName":"(漸層色運動瓶) 輕芯鈦提手運動保溫瓶850ml","displayName":"提手瓶 Go 漸層","shortName":"提手 Go 漸層","fullName":"WOKY 提手系列 鈦陶瓷 Go 850ml 漸層","suffix":"Go","material":"鈦陶瓷","spec":"850ml","disc":true},{"id":"qm7962f","seriesId":"s10","oldName":"(碗豆/彈蓋杯) 輕量輕芯鈦瓷彈蓋保溫瓶450ml","displayName":"彈蓋杯 Lite 碗豆","shortName":"彈蓋 Lite","fullName":"WOKY 彈蓋系列 鈦陶瓷 Lite 450ml","suffix":"Lite","material":"鈦陶瓷","spec":"450ml/600ml","disc":true},{"id":"ispp5at","seriesId":"s10","oldName":"(胖胖杯) All-P 輕芯鈦瓷雙飲保溫瓶500ml","displayName":"彈蓋杯 Essential All-P","shortName":"彈蓋 Essential","fullName":"WOKY 彈蓋系列 鈦陶瓷 Essential 500ml","suffix":"Essential","material":"鈦陶瓷","spec":"500ml/780ml","disc":true},{"id":"9q2emti","seriesId":"s11","oldName":"All-P TRITAN隨身雙飲杯500ml","displayName":"彈蓋杯 Daily All-P","shortName":"彈蓋 Daily","fullName":"WOKY 彈蓋系列 TRITAN Daily 500ml","suffix":"Daily","material":"TRITAN","spec":"500ml","disc":true}]}));
+  const [mode, setMode] = useState('display');
+  const [tagColors, setTagColors] = useState(_saved?.tagColors || ({"鈦陶瓷":"#2e8b6e","純鈦":"#607080","陶瓷":"#d97a2a","ECOZEN":"#1a7fa8","TRITAN":"#4a6abf","無塗層":"#888880","TICERA":"#bf3a5a","過期":"#aaaaaa"}));
+  const [view, setView] = useState('series');
+  const [memoOpen, setMemoOpen] = useState(false);
+  const [suffixMemo, setSuffixMemo] = useState(() => {
+    try { const s = localStorage.getItem('woky_suffix_memo'); if(s) return JSON.parse(s); } catch(e){}
+    return SUFFIX_MEMO_DEFAULT;
+  });
+  const [suffixColors, setSuffixColors] = useState(_saved?.suffixColors || DEFAULT_SUFFIX_COLORS);
+  const [toast, setToast] = useState('');
+  const [saveLabel, setSaveLabel] = useState('');
+  const [addModal, setAddModal] = useState(null);
+  const [newProd, setNewProd] = useState({});
+  const [editModal, setEditModal] = useState(null); // product id being edited
+  const [addSeriesModal, setAddSeriesModal] = useState(null);
+  const [newSeries, setNewSeries] = useState({});
+  const dragging = useRef(null);
+  const toastTimer = useRef();
+  const saveLabelTimer = useRef();
+  const history = useRef([]);
+  const historyIdx = useRef(-1);
+
+  // Auto-save to localStorage whenever data/tagColors changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data, tagColors, suffixColors }));
+      setSaveLabel('已自動儲存');
+      clearTimeout(saveLabelTimer.current);
+      saveLabelTimer.current = setTimeout(() => setSaveLabel(''), 1800);
+    } catch(e) {}
+  }, [data, tagColors]);
+
+  // Cmd+S / Ctrl+S → download saved HTML
+  const exportHTMLRef = useRef(null);
+  const undoRef = useRef(null);
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        exportHTMLRef.current && exportHTMLRef.current();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undoRef.current && undoRef.current();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 2200);
+  };
+
+  // ── UNDO ──────────────────────────────────────────────────────────
+  const pushHistory = (snapshot) => {
+    const next = history.current.slice(0, historyIdx.current + 1);
+    next.push(JSON.stringify(snapshot));
+    if (next.length > 50) next.shift();
+    history.current = next;
+    historyIdx.current = next.length - 1;
+  };
+
+  const undo = () => {
+    if (historyIdx.current <= 0) { showToast('已到最舊紀錄'); return; }
+    historyIdx.current -= 1;
+    const prev = JSON.parse(history.current[historyIdx.current]);
+    setData(prev);
+    showToast('↩ 已復原上一步');
+  };
+
+  const setDataH = (updater) => {
+    setData(prev => {
+      pushHistory(prev);
+      return typeof updater === 'function' ? updater(prev) : updater;
+    });
+  };
+
+  // Export HTML with current data baked in
+  const exportHTML = () => {
+    const htmlContent = document.documentElement.outerHTML;
+    // Replace INIT_DATA definition with current state
+    const dataStr = JSON.stringify({ data, tagColors }, null, 2);
+    const patched = htmlContent.replace(
+      /\/\/ ── STORAGE ─+[\s\S]*?const STORAGE_KEY = '[^']+';/,
+      `// ── STORAGE ───────────────────────────────────────────────────────
+const STORAGE_KEY = 'woky_naming_tool_v1';`
+    ).replace(
+      /const _saved = loadSaved\(\);\s*const \[data, setData\] = useState\(_saved\?\.data \|\| INIT_DATA\);\s*[\s\S]*?const \[tagColors, setTagColors\] = useState\(_saved\?\.tagColors \|\| DEFAULT_COLORS\);/,
+      `const _saved = loadSaved();
+  const [data, setData] = useState(_saved?.data || (${JSON.stringify(data)}));
+  const [mode, setMode] = useState('display');
+  const [tagColors, setTagColors] = useState(_saved?.tagColors || (${JSON.stringify(tagColors)}));`
+    );
+    const blob = new Blob([patched], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'WOKY產品命名管理工具.html';
+    a.click();
+    showToast('✓ 已下載儲存版本');
+    setSaveLabel('✓ 已下載');
+    exportHTMLRef.current = exportHTML;
+    undoRef.current = undo;
+  };
+
+  const modeField = MODES.find(m => m.key===mode)?.field || 'displayName';
+
+  // update product field
+  const updateProduct = (id, field, val) => {
+    setDataH(d => ({ ...d, products: d.products.map(p => p.id===id ? {...p,[field]:val} : p) }));
+  };
+
+  // rename material across all products + migrate color key
+  const renameMaterial = (oldMat, newMat) => {
+    setData(d => ({...d,
+      products: d.products.map(x => x.material===oldMat ? {...x, material:newMat} : x),
+      discontinued: d.discontinued.map(x => x.material===oldMat ? {...x, material:newMat} : x)
+    }));
+    setTagColors(tc => {
+      const next = {...tc};
+      if (next[oldMat] !== undefined) { next[newMat] = next[oldMat]; delete next[oldMat]; }
+      return next;
+    });
+  };
+
+  // delete product
+  const deleteProduct = (id) => {
+    setDataH(d => ({ ...d, products: d.products.filter(p => p.id!==id) }));
+    showToast('已刪除產品');
+  };
+
+  // duplicate product
+  const duplicateProduct = (id) => {
+    setDataH(d => {
+      const idx = d.products.findIndex(p => p.id===id);
+      if (idx === -1) return d;
+      const orig = d.products[idx];
+      const copy = {...orig, id: genId(), displayName: orig.displayName + ' 副本'};
+      const next = [...d.products];
+      next.splice(idx+1, 0, copy);
+      return {...d, products: next};
+    });
+    showToast('已複製產品');
+  };
+
+  // move to discontinued
+  const moveToDisc = (id) => {
+    setDataH(d => {
+      const prod = d.products.find(p => p.id===id);
+      if (!prod) return d;
+      return {
+        ...d,
+        products: d.products.filter(p => p.id!==id),
+        discontinued: [...d.discontinued, {...prod, disc:true}]
+      };
+    });
+    showToast('已移至過期產品');
+  };
+
+  // restore from discontinued
+  const [restoreModal, setRestoreModal] = useState(null);
+  const restoreFromDisc = (id) => {
+    const prod = data.discontinued.find(p => p.id===id);
+    if (!prod) return;
+    const seriesExists = data.series.some(s => s.id === prod.seriesId);
+    if (!seriesExists) {
+      setRestoreModal({ prod, targetSeriesId: data.series[0]?.id || '' });
+      return;
+    }
+    setData(prev => ({
+      ...prev,
+      discontinued: prev.discontinued.filter(p => p.id!==id),
+      products: [...prev.products, {...prod, disc:false}]
+    }));
+    showToast('已恢復產品');
+  };
+  const confirmRestore = () => {
+    if (!restoreModal) return;
+    const { prod, targetSeriesId } = restoreModal;
+    if (!targetSeriesId) return;
+    setData(d => ({
+      ...d,
+      discontinued: d.discontinued.filter(p => p.id !== prod.id),
+      products: [...d.products, {...prod, disc:false, seriesId: targetSeriesId}]
+    }));
+    setRestoreModal(null);
+    showToast('已恢復產品');
+  };
+
+  // add product
+  const addProduct = () => {
+    if (!newProd.displayName) return;
+    const p = {
+      id: genId(),
+      seriesId: addModal.seriesId,
+      oldName: newProd.oldName || '',
+      displayName: newProd.displayName || '',
+      shortName: newProd.shortName || newProd.displayName || '',
+      fullName: newProd.fullName || `WOKY ${newProd.displayName}`,
+      suffix: newProd.suffix || '',
+      material: newProd.material || '鈦陶瓷',
+      spec: newProd.spec || '',
+      disc: false
+    };
+    setData(d => ({ ...d, products: [...d.products, p] }));
+    setAddModal(null); setNewProd({});
+    showToast('已新增產品');
+  };
+
+  // edit product (modal)
+  const saveEdit = () => {
+    if (!editModal) return;
+    setDataH(d => ({
+      ...d,
+      products: d.products.map(p => p.id === editModal.id ? {...p, ...editModal} : p),
+      discontinued: d.discontinued.map(p => p.id === editModal.id ? {...p, ...editModal} : p),
+    }));
+    setEditModal(null);
+    showToast('已儲存');
+  };
+
+  // add series
+  const addSeries = () => {
+    if (!newSeries.name) return;
+    const s = { id:genId(), catId:addSeriesModal, name:newSeries.name, en:newSeries.en||'' };
+    setData(d => ({ ...d, series: [...d.series, s] }));
+    setAddSeriesModal(null); setNewSeries({});
+    showToast('已新增系列');
+  };
+
+  // update series field
+  const updateSeries = (id, field, val) => {
+    setData(d => ({ ...d, series: d.series.map(s => s.id===id ? {...s,[field]:val} : s) }));
+  };
+
+  // drag n drop
+  const onDragStart = (e, prodId, fromSeriesId) => {
+    dragging.current = { prodId, fromSeriesId };
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const onDrop = (e, toSeriesId) => {
+    e.preventDefault();
+    if (!dragging.current) return;
+    const { prodId } = dragging.current;
+    setData(d => ({ ...d, products: d.products.map(p => p.id===prodId ? {...p, seriesId:toSeriesId} : p) }));
+    dragging.current = null;
+    showToast('已移動產品');
+  };
+  const onDropDisc = (e) => {
+    e.preventDefault();
+    if (!dragging.current) return;
+    moveToDisc(dragging.current.prodId);
+    dragging.current = null;
+  };
+
+  // export CSV
+  const exportCSV = () => {
+    const rows = [['系列','舊名稱','展示名稱','簡稱','完整品名','材質','規格','後綴','狀態']];
+    [...data.products, ...data.discontinued].forEach(p => {
+      const s = data.series.find(s=>s.id===p.seriesId);
+      rows.push([s?.name||'', p.oldName, p.displayName, p.shortName, p.fullName, p.material, p.spec, p.suffix, p.disc?'過期':'現行']);
+    });
+    const csv = rows.map(r => r.map(c => `"${c||''}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='WOKY產品命名架構.csv'; a.click();
+    showToast('CSV 已匯出');
+  };
+
+  // copy all
+  const copyAll = () => {
+    const lines = [];
+    data.categories.forEach(cat => {
+      lines.push(`\n【${cat.label}】`);
+      data.series.filter(s=>s.catId===cat.id).forEach(s => {
+        lines.push(`  ▸ ${s.name}`);
+        data.products.filter(p=>p.seriesId===s.id).forEach(p => {
+          lines.push(`    - ${p[modeField]}${p.spec?' ('+p.spec+')':''}`);
+        });
+      });
+    });
+    navigator.clipboard.writeText(lines.join('\n'));
+    showToast('已複製架構到剪貼簿');
+  };
+
+  const [dragOver, setDragOver] = useState(null);
+  const [dragOverProd, setDragOverProd] = useState(null);
+
+  return (
+    <div>
+      {/* TOP BAR */}
+      <div className="topbar">
+        <div className="topbar-brand">
+          WOKY<span className="topbar-subtitle">產品命名管理工具</span>
+        </div>
+        <div className="topbar-right">
+          <button onClick={undo} title="Cmd+Z" style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid #e2ddd8',background:'transparent',color:'#9a9088',cursor:'pointer',transition:'all 0.15s',display:'flex',alignItems:'center',gap:4}}>↩ 復原</button>
+          <button onClick={()=>setMemoOpen(o=>!o)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'6px 14px',borderRadius:20,border:'1px solid',borderColor:memoOpen?'#141210':'#e2ddd8',background:memoOpen?'#141210':'transparent',color:memoOpen?'#fff':'#9a9088',cursor:'pointer',transition:'all 0.15s'}}>後綴詞備忘</button>
+          {saveLabel && <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:500,color:'var(--mid)',letterSpacing:'0.3px'}}>{saveLabel}</span>}
+          <div style={{display:'flex',gap:2,background:'#f0ece8',borderRadius:20,padding:2}}>
+            {[{k:'series',l:'系列檢視'},{k:'material',l:'材質檢視'}].map(v=>(
+              <button key={v.k} onClick={()=>setView(v.k)} style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:600,padding:'5px 14px',borderRadius:20,border:'none',cursor:'pointer',background:view===v.k?'#141210':'transparent',color:view===v.k?'#fff':'#9a9088',transition:'all 0.15s'}}>{v.l}</button>
+            ))}
+          </div>
+          <div className="mode-tabs">
+            {MODES.map(m => (
+              <button key={m.key} className={`mode-tab ${mode===m.key?'active':''}`} onClick={()=>setMode(m.key)}>{m.label}</button>
+            ))}
+          </div>
+          <button className="btn btn-ghost" onClick={copyAll}>複製架構</button>
+          <button className="btn btn-ghost" onClick={exportCSV}>匯出 CSV</button>
+          <button className="btn btn-primary" onClick={exportHTML}>💾 下載儲存版本</button>
+        </div>
+      </div>
+
+      {/* MEMO SIDEBAR */}
+      {memoOpen && (
+        <MemoSidebar
+          suffixMemo={suffixMemo}
+          setSuffixMemo={setSuffixMemo}
+          suffixColors={suffixColors}
+          setSuffixColors={setSuffixColors}
+          onClose={()=>setMemoOpen(false)}
+        />
+      )}
+      <div className="main">
+        {/* hint */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'32px'}}>
+          <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'11px',fontWeight:500,color:'var(--mid)',letterSpacing:'0.3px',lineHeight:'1.8'}}>
+            雙擊任何文字可直接編輯 · 拖曳產品列可移動系列 · 點擊材質標籤可改色 · 拖至「過期產品」封存 · 瀏覽器自動記憶變更
+          </div>
+          <button style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',fontWeight:500,color:'#aaa',background:'transparent',border:'1px solid #e0e0e0',padding:'5px 14px',borderRadius:20,cursor:'pointer',whiteSpace:'nowrap',marginLeft:16}}
+            onClick={()=>{ if(window.confirm('確定要清除所有變更，回到初始資料嗎？')) { localStorage.removeItem(STORAGE_KEY); setData(INIT_DATA); setTagColors(DEFAULT_COLORS); showToast('已重設為初始資料'); } }}>
+            重設資料
+          </button>
+        </div>
+
+        {/* MATERIAL VIEW */}
+        {view === 'material' && (() => {
+          const allMats = [...new Set(data.products.map(p=>p.material))].sort();
+          return (
+            <div>
+              {allMats.map(mat => {
+                const prods = data.products.filter(p=>p.material===mat);
+                const matColor = tagColors[mat] || '#888';
+                return (
+                  <div key={mat} className="cat-block">
+                    <div className="cat-header">
+                      <div style={{display:'flex',alignItems:'center',gap:12}}>
+                        <span className="cat-label">{mat}</span>
+                        <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'11px',color:'#9a9088'}}>{prods.length} 個品項</span>
+                      </div>
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:20}}>
+                      {prods.map(p => {
+                        const ser = data.series.find(s=>s.id===p.seriesId);
+                        return (
+                          <div key={p.id} className="series-card">
+                            <div className="product-row" style={{cursor:'default'}}>
+                              <span className="material-tag" style={{background:matColor,fontSize:'9px',flexShrink:0}}>{mat}</span>
+                              <div className="product-name-cell">
+                                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                  <span className="product-name">{p.displayName}</span>
+                                  {p.suffix && mode!=='old' && mode!=='full' && <SuffixTag suffix={p.suffix} color={suffixColors[p.suffix]||'#888'} onColorChange={c=>setSuffixColors(sc=>({...sc,[p.suffix]:c}))} onSuffixChange={v=>updateProduct(p.id,'suffix',v)} />}
+                                </div>
+                                {ser && <span className="old-name-hint" style={{color:'#b8b0a8'}}>{ser.name}</span>}
+                                {p.oldName && <span className="old-name-hint">舊：{p.oldName}</span>}
+                              </div>
+                              <span className="product-spec">{p.spec}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* CATEGORIES */}
+        {view === 'series' && data.categories.map(cat => {
+          const catSeries = data.series.filter(s => s.catId===cat.id);
+          return (
+            <div key={cat.id} className="cat-block">
+              <div className="cat-header">
+                <InlineEdit value={cat.label} className="cat-label"
+                  onChange={v => setData(d => ({...d, categories: d.categories.map(c => c.id===cat.id?{...c,label:v}:c)}))} />
+                <button className="btn btn-add btn-small" onClick={()=>setAddSeriesModal(cat.id)}>+ 系列</button>
+              </div>
+              <div className="series-grid">
+                {catSeries.map(s => {
+                  const prods = data.products.filter(p => p.seriesId===s.id);
+                  return (
+                    <div key={s.id} className={`series-card ${dragOver===s.id?'drag-over':''}`}
+                      onDragOver={e=>{e.preventDefault();setDragOver(s.id);}}
+                      onDragLeave={()=>setDragOver(null)}
+                      onDrop={e=>{setDragOver(null);onDrop(e,s.id);}}>
+                      <div className="series-head">
+                        <div className="series-name-wrap">
+                          <InlineEdit value={s.name} className="series-name" onChange={v=>updateSeries(s.id,'name',v)} />
+                          <InlineEdit value={s.en} className="series-en" onChange={v=>updateSeries(s.id,'en',v)} />
+                        </div>
+                        <div className="series-actions">
+                          <button className="btn btn-add btn-small" onClick={()=>{setAddModal({seriesId:s.id});setNewProd({});}}>+ 產品</button>
+                          <button className="btn btn-danger btn-small" style={{opacity:0.55}} title="刪除系列（需先移除所有產品）"
+                            onClick={()=>{
+                              if(prods.length>0){ showToast('請先移除或封存此系列所有產品'); return; }
+                              if(window.confirm(`確定刪除「${s.name}」系列嗎？`)){
+                                setData(d=>({...d, series:d.series.filter(x=>x.id!==s.id)}));
+                                showToast('已刪除系列');
+                              }
+                            }}>✕ 系列</button>
+                        </div>
+                      </div>
+                      <div className="product-list">
+                        {prods.map(p => (
+                          <div key={p.id} className={`product-row${mode==='all'?' all-mode':''}`}
+                            draggable onDragStart={e=>onDragStart(e,p.id,s.id)}
+                            onDragOver={e=>{e.preventDefault();e.stopPropagation();setDragOverProd(p.id);setDragOver(null);}}
+                            onDragLeave={e=>{e.stopPropagation();setDragOverProd(null);}}
+                            onDrop={e=>onDropOnProd(e,p.id,s.id)}
+                            style={dragOverProd===p.id?{outline:'2px dashed #8a7a6a',outlineOffset:'-2px',borderRadius:8,position:'relative'}:{position:'relative'}}>
+                            {mode === 'all' ? (
+                              <div style={{flex:1,minWidth:0}}>
+                                {/* ALL MODE: top bar + name table */}
+                                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                                  <span className="drag-handle" style={{flexShrink:0}}>⠿</span>
+                                  <TagColorPicker
+                                    material={p.material}
+                                    color={tagColors[p.material] || '#999'}
+                                    onColorChange={c => setTagColors(tc => ({...tc, [p.material]: c}))}
+                                    onMaterialChange={v => renameMaterial(p.material, v)}
+                                  />
+                                  <InlineEdit value={p.spec} className="product-spec" onChange={v=>updateProduct(p.id,'spec',v)} />
+                                  <div style={{flex:1}} />
+                                  <div className="row-end row-delete">
+                                    <button className="btn btn-edit btn-small" title="完整編輯" onClick={()=>setEditModal({...p})}>✎</button>
+                                    <button className="btn btn-add btn-small" title="複製此產品" onClick={()=>duplicateProduct(p.id)}>⧉</button>
+                                    <button className="btn btn-danger btn-small" title="移至過期" onClick={()=>moveToDisc(p.id)}>封存</button>
+                                    <button className="btn btn-danger btn-small" onClick={()=>{ if(window.confirm('確定永久刪除這個產品嗎？此動作無法復原。')) deleteProduct(p.id); }}>✕</button>
+                                  </div>
+                                </div>
+                                <div className="all-name-rows">
+                                  <div className="all-name-row">
+                                    <span className="all-name-label">展示</span>
+                                    <span className="all-name-val"><InlineEdit value={p.displayName} onChange={v=>updateProduct(p.id,'displayName',v)} />{p.suffix && <span style={{marginLeft:6,display:'inline-block'}}><SuffixTag suffix={p.suffix} color={suffixColors[p.suffix]||'#888'} onColorChange={c=>setSuffixColors(sc=>({...sc,[p.suffix]:c}))} onSuffixChange={v=>updateProduct(p.id,'suffix',v)} /></span>}</span>
+                                  </div>
+                                  <div className="all-name-row">
+                                    <span className="all-name-label">簡稱</span>
+                                    <span className="all-name-val is-short"><InlineEdit value={p.shortName} onChange={v=>updateProduct(p.id,'shortName',v)} /></span>
+                                  </div>
+                                  <div className="all-name-row">
+                                    <span className="all-name-label">完整品名</span>
+                                    <span className="all-name-val is-full"><InlineEdit value={p.fullName} onChange={v=>updateProduct(p.id,'fullName',v)} /></span>
+                                  </div>
+                                  <div className="all-name-row">
+                                    <span className="all-name-label">舊名稱</span>
+                                    <span className="all-name-val is-old"><InlineEdit value={p.oldName} onChange={v=>updateProduct(p.id,'oldName',v)} /></span>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="drag-handle">⠿</span>
+                                <TagColorPicker
+                                  material={p.material}
+                                  color={tagColors[p.material] || '#999'}
+                                  onColorChange={c => setTagColors(tc => ({...tc, [p.material]: c}))}
+                                  onMaterialChange={v => renameMaterial(p.material, v)}
+                                />
+                                <div className="product-name-cell">
+                                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                    <span className="product-name">
+                                      <InlineEdit value={p[modeField]} onChange={v=>updateProduct(p.id,modeField,v)} />
+                                    </span>
+                                    {p.suffix && mode!=='old' && mode!=='full' && <SuffixTag suffix={p.suffix} color={suffixColors[p.suffix]||'#888'} onColorChange={c=>setSuffixColors(sc=>({...sc,[p.suffix]:c}))} onSuffixChange={v=>updateProduct(p.id,'suffix',v)} />}
+                                  </div>
+                                  {mode==='display' && p.oldName && (
+                                    <span className="old-name-hint">舊：{p.oldName}</span>
+                                  )}
+                                </div>
+                                <InlineEdit value={p.spec} className="product-spec" onChange={v=>updateProduct(p.id,'spec',v)} />
+                                <div className="row-end row-delete">
+                                  <button className="btn btn-edit btn-small" title="完整編輯" onClick={()=>setEditModal({...p})}>✎</button>
+                                  <button className="btn btn-add btn-small" title="複製此產品" onClick={()=>duplicateProduct(p.id)}>⧉</button>
+                                  <button className="btn btn-danger btn-small" title="移至過期" onClick={()=>moveToDisc(p.id)}>封存</button>
+                                  <button className="btn btn-danger btn-small" onClick={()=>{ if(window.confirm('確定永久刪除這個產品嗎？此動作無法復原。')) deleteProduct(p.id); }}>✕</button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="add-row">
+                        <button className="btn btn-add btn-small" style={{width:'100%'}} onClick={()=>{setAddModal({seriesId:s.id});setNewProd({});}}>
+                          + 新增產品
+                        </button>
+                      </div>
+                      {/* Series notes / formula — per mode */}
+                      <div style={{borderTop:'1px dashed #e2ddd8',padding:'10px 20px 14px'}}>
+                        <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:700,color:'#b8b0a8',letterSpacing:'0.5px',marginBottom:4}}>
+                          命名公式 / 附註
+                          <span style={{fontWeight:400,marginLeft:6,color:'#ccc'}}>（{MODES.find(m=>m.key===mode)?.label || mode}）</span>
+                        </div>
+                        <textarea
+                          value={(s.modeNotes&&s.modeNotes[mode])||''}
+                          onChange={e=>updateSeries(s.id,'modeNotes',{...(s.modeNotes||{}), [mode]:e.target.value})}
+                          placeholder="例：WOKY + 系列 + 材質 + 品類 + 後綴詞"
+                          rows={1}
+                          ref={el=>{if(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}}}
+                          onInput={e=>{e.target.style.height='auto';e.target.style.height=e.target.scrollHeight+'px';}}
+                          style={{width:'100%',fontFamily:'DM Mono,monospace',fontSize:'11px',color:'#6a6060',lineHeight:'1.7',border:'none',outline:'none',background:'transparent',resize:'none',overflow:'hidden',padding:0,boxSizing:'border-box'}}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {view === 'series' && (
+        <div className="cat-block">
+          <div className="cat-header">
+            <div className="cat-label" style={{color:'#aaa'}}>過期 / 封存產品 Legacy Products</div>
+          </div>
+          <div className="disc-section"
+            onDragOver={e=>e.preventDefault()}
+            onDrop={onDropDisc}>
+            <div className="disc-label">拖曳產品到此區域可封存 · 點擊「恢復」可重新分配至系列</div>
+            {data.discontinued.length === 0 && (
+              <div style={{fontFamily:'DM Mono,monospace',fontSize:'11px',color:'#ccc',padding:'8px 0'}}>目前沒有過期產品</div>
+            )}
+            <div className="disc-grid">
+              {data.discontinued.map(p => (
+                <div key={p.id} className="disc-item"
+                  onDoubleClick={()=>setEditModal({...p})}
+                  style={{cursor:'default'}}
+                  title="雙擊編輯">
+                  <span className="material-tag" style={{background: tagColors[p.material]||'#999', fontSize:'9px'}}>{p.material}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    {/* Old name prominent */}
+                    <div style={{fontFamily:'Noto Serif TC,serif',fontSize:'14px',fontWeight:400,color:'#141210',lineHeight:1.4}}>
+                      {p.oldName || <span style={{color:'#ccc',fontStyle:'italic'}}>無舊名稱</span>}
+                    </div>
+                    {/* New display name as subtitle */}
+                    <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3,flexWrap:'wrap'}}>
+                      <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'10px',color:'#aaa'}}>→</span>
+                      <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'11px',color:'#888'}}>{p.displayName}</span>
+                      {p.suffix && <span style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',fontWeight:700,background:suffixColors[p.suffix]||'#888',color:'#fff',padding:'1px 7px',borderRadius:10}}>{p.suffix}</span>}
+                    </div>
+                    {(sr => sr ? <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',color:'#ccc',marginTop:2}}>原系列：{sr.name}</div> : <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'9px',color:'#e8b4b4',marginTop:2}}>原系列已刪除</div>)(data.series.find(x=>x.id===p.seriesId))}
+                  </div>
+                  <span className="disc-old">{p.spec}</span>
+                  <button className="btn btn-add btn-small" onClick={()=>restoreFromDisc(p.id)}>恢復</button>
+                  <button className="btn btn-danger btn-small" onClick={()=>setData(d=>({...d,discontinued:d.discontinued.filter(x=>x.id!==p.id)}))}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        )}
+      </div>
+
+      {/* RESTORE MODAL */}
+      {restoreModal && (
+        <div className="modal-bg" onClick={e=>{if(e.target.className==='modal-bg')setRestoreModal(null);}}>
+          <div className="modal">
+            <h3>原系列已刪除，請選擇要恢復到哪個系列</h3>
+            <div style={{fontFamily:'Noto Sans TC,sans-serif',fontSize:'12px',color:'#888',marginBottom:12}}>
+              產品：{restoreModal.prod.displayName}
+            </div>
+            <div className="modal-field">
+              <label>目標系列</label>
+              <select value={restoreModal.targetSeriesId}
+                onChange={e=>setRestoreModal(r=>({...r,targetSeriesId:e.target.value}))}
+                style={{width:'100%',padding:'6px 8px',borderRadius:4,border:'1px solid #ddd',fontFamily:'Noto Sans TC,sans-serif',fontSize:'12px'}}>
+                {data.series.map(s=>(
+                  <option key={s.id} value={s.id}>{s.name} {s.en}</option>
+                ))}
+              </select>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={()=>setRestoreModal(null)}>取消</button>
+              <button className="btn btn-primary" onClick={confirmRestore}>確認恢復</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PRODUCT MODAL */}
+      {editModal && (
+        <div className="modal-bg" onClick={e=>{if(e.target.className==='modal-bg')setEditModal(null);}}>
+          <div className="modal">
+            <h3>編輯產品</h3>
+            {[
+              {key:'oldName', label:'舊名稱（原始命名）'},
+              {key:'displayName', label:'展示名稱 *'},
+              {key:'shortName', label:'簡稱'},
+              {key:'fullName', label:'完整品名'},
+              {key:'suffix', label:'後綴詞（Classic / Pro / Go …）'},
+              {key:'spec', label:'規格（容量/尺寸）'},
+            ].map(f => (
+              <div key={f.key} className="modal-field">
+                <label>{f.label}</label>
+                <input value={editModal[f.key]||''} onChange={e=>setEditModal(m=>({...m,[f.key]:e.target.value}))} />
+              </div>
+            ))}
+            <div className="modal-field">
+              <label>材質標籤（可輸入自訂名稱）</label>
+              <input value={editModal.material||''} placeholder="輸入材質，例如：鈦陶瓷"
+                onChange={e=>setEditModal(m=>({...m,material:e.target.value}))}
+                style={{width:'100%'}} />
+              <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:6}}>
+                {MATERIAL_TAGS.map(t=><span key={t} onClick={()=>setEditModal(m=>({...m,material:t}))} style={{cursor:'pointer',background:tagColors[t]||'#999',color:'#fff',fontSize:'9px',fontWeight:700,padding:'2px 8px',borderRadius:10,fontFamily:'Noto Sans TC,sans-serif'}}>{t}</span>)}
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={()=>setEditModal(null)}>取消</button>
+              <button className="btn-confirm" onClick={saveEdit}>儲存</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD PRODUCT MODAL */}
+      {addModal && (
+        <div className="modal-bg" onClick={e=>{if(e.target.className==='modal-bg')setAddModal(null);}}>
+          <div className="modal">
+            <h3>新增產品</h3>
+            {[
+              {key:'oldName', label:'舊名稱（原始命名）'},
+              {key:'displayName', label:'展示名稱 *'},
+              {key:'shortName', label:'簡稱'},
+              {key:'fullName', label:'完整品名'},
+              {key:'suffix', label:'後綴詞（Classic / Pro / Go …）'},
+              {key:'spec', label:'規格（容量/尺寸）'},
+            ].map(f => (
+              <div key={f.key} className="modal-field">
+                <label>{f.label}</label>
+                <input value={newProd[f.key]||''} onChange={e=>setNewProd(p=>({...p,[f.key]:e.target.value}))} />
+              </div>
+            ))}
+            <div className="modal-field">
+              <label>材質標籤（可輸入自訂名稱）</label>
+              <input value={newProd.material||''} placeholder="輸入材質，例如：鈦陶瓷"
+                onChange={e=>setNewProd(p=>({...p,material:e.target.value}))}
+                style={{width:'100%'}} />
+              <div style={{display:'flex',flexWrap:'wrap',gap:4,marginTop:6}}>
+                {MATERIAL_TAGS.map(t=><span key={t} onClick={()=>setNewProd(p=>({...p,material:t}))} style={{cursor:'pointer',background:tagColors[t]||'#999',color:'#fff',fontSize:'9px',fontWeight:700,padding:'2px 8px',borderRadius:10,fontFamily:'Noto Sans TC,sans-serif'}}>{t}</span>)}
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={()=>setAddModal(null)}>取消</button>
+              <button className="btn-confirm" onClick={addProduct}>新增</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD SERIES MODAL */}
+      {addSeriesModal && (
+        <div className="modal-bg" onClick={e=>{if(e.target.className==='modal-bg')setAddSeriesModal(null);}}>
+          <div className="modal">
+            <h3>新增系列</h3>
+            <div className="modal-field">
+              <label>系列名稱 *</label>
+              <input value={newSeries.name||''} onChange={e=>setNewSeries(s=>({...s,name:e.target.value}))} />
+            </div>
+            <div className="modal-field">
+              <label>英文副標</label>
+              <input value={newSeries.en||''} onChange={e=>setNewSeries(s=>({...s,en:e.target.value}))} />
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={()=>setAddSeriesModal(null)}>取消</button>
+              <button className="btn-confirm" onClick={addSeries}>新增</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST */}
+      <div className={`toast ${toast?'show':''}`}>{toast}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
